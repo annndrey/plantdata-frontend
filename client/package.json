@@ -1,0 +1,39 @@
+{
+  "name": "tomatoes-client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build"
+  },
+  "dependencies": {
+    "axios": "^0.18.0",
+    "moment": "^2.24.0",
+    "node-sass": "^4.11.0",
+    "pica": "^5.0.0",
+    "sass-loader": "^7.1.0",
+    "vue": "^2.6.10",
+    "vue-flash-message": "^0.7.2",
+    "vue-moment": "^4.0.0",
+    "vue-router": "^3.0.2",
+    "vueify": "^9.4.1",
+    "vuejs-clipper": "^0.2.9",
+    "vuex": "^3.1.0"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "^3.0.5",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "vue-template-compiler": "^2.6.10"
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 8"
+  ]
+}
