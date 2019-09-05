@@ -30,7 +30,6 @@
 	<img :src="pct[1]" width="100%"> {{pct[0]}}
       </div>
     </div>
-
     <p v-if="loading"><img class="loading" src="@/assets/crone.png" height="40px"></p>
   </div>
 </div>
@@ -95,7 +94,8 @@ export default {
 	    //let linklist = []
 	    this.imagesrc = []
 	    this.pictures[this.pictindex].map( p => {
-		this.imagesrc.push([p[0], urlpref+p[1]])
+		let correctdate = moment(p[0]).format("DD/MM/YY HH:mm")
+		this.imagesrc.push([correctdate, urlpref+p[1]])
 	    })
 	    //this. imagesrc = urlpref + this.pictures[this.pictindex][1]
 	    //this.imglabel = this.pictures[this.pictindex][0][0]
@@ -136,8 +136,9 @@ export default {
 		this.imgcount = 0
 		this.pictindex = 0
 		this.sensordata.map(obj => {
+		    let correctdate = moment(obj.ts).format("DD/MM/YY HH:mm")
 		    //this.temperatures[obj.ts] = obj.lux
-		    this.labels.push(obj.ts)
+		    this.labels.push(correctdate)
 		    this.lux.push(obj.lux)
 		    this.hum0.push(obj.hum0)
 		    this.hum1.push(obj.hum1)
@@ -145,7 +146,6 @@ export default {
 		    this.temp1.push(obj.temp1)
 		    this.tempA.push(obj.tempA)
 		    this.co2.push(obj.co2)
-		    console.log(obj.pictures)
 		    let pictlist = []
 		    obj.pictures.map( p => {
 			pictlist.push([obj.ts,  p.fpath])
