@@ -94,7 +94,7 @@ export default {
 	    //let linklist = []
 	    this.imagesrc = []
 	    this.pictures[this.pictindex].map( p => {
-		let correctdate = moment(p[0]).format("DD/MM/YY HH:mm")
+		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD/MM/YY HH:mm")
 		this.imagesrc.push([correctdate, urlpref+p[1]])
 	    })
 	    //this. imagesrc = urlpref + this.pictures[this.pictindex][1]
@@ -136,7 +136,7 @@ export default {
 		this.imgcount = 0
 		this.pictindex = 0
 		this.sensordata.map(obj => {
-		    let correctdate = moment(obj.ts).format("DD/MM/YY HH:mm")
+		    let correctdate = moment(obj.ts).utcOffset("+00:00").format("DD/MM/YY HH:mm")
 		    //this.temperatures[obj.ts] = obj.lux
 		    this.labels.push(correctdate)
 		    this.lux.push(obj.lux)
