@@ -27,7 +27,7 @@
     
     <div class="row">
       <div class="col-md-6" v-for="pct in imagesrc">
-	<img :src="pct.url" width="100%"> {{pct.pictdate}} {{pct.label}}
+	<img :src="pct.url" width="100%" @mouseenter="mouseEnter" @mousemove="mousemove" @mouseleave="mouseLeave"> {{pct.pictdate}} {{pct.label}}
       </div>
     </div>
     <p v-if="loading"><img class="loading" src="@/assets/crone.png" height="40px"></p>
@@ -88,6 +88,16 @@ export default {
 	...mapGetters({ currentUser: 'currentUser'})
     },
     methods: {
+	mouseEnter(event) {
+            console.log('mouseneter')
+            this.$el.addEventListener('mousemove', this.mouseMove, false)
+        },
+        mouseLeave(event) {
+            this.popup = false;
+        },
+        mouseMove(event) {
+	    console.log("x: " + event.offsetX, "y: " + event.offsetY)
+        },
 	changePicture() {
 	    console.log(this.pictindex)
 	    
