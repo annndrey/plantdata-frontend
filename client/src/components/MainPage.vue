@@ -27,7 +27,7 @@
     
     <div class="row">
       <div class="col-md-6" v-for="pct in imagesrc">
-	<img :src="pct.url" width="100%" @mouseenter="mouseEnter" @mousemove="mousemove" @mouseleave="mouseLeave"> {{pct.pictdate}} {{pct.label}}
+	<img :src="pct.url" width="100%" @mouseenter="mouseEnter"" @mouseleave="mouseLeave"> {{pct.pictdate}} {{pct.label}}
       </div>
     </div>
     <p v-if="loading"><img class="loading" src="@/assets/crone.png" height="40px"></p>
@@ -43,6 +43,7 @@ export default {
     name: 'MainPage',
     data: function() {
 	return {
+	    trackcoords: false,
 	    loading: false,
 	    sensors: null,
 	    sensordata: null,
@@ -89,23 +90,25 @@ export default {
     },
     methods: {
 	mouseEnter(event) {
-            console.log('mouseneter')
+	    this.trackcoords = true
+	    console.log("start coords tracking")
             this.$el.addEventListener('mousemove', this.mouseMove, false)
         },
         mouseLeave(event) {
-            this.popup = false;
+	    console.log("stop coords tracking")
+            this.trackcoords = false;
         },
         mouseMove(event) {
-	    console.log("x: " + event.offsetX, "y: " + event.offsetY)
+	    if (this.trackcoords) {
+		console.log("x: " + event.offsetX, "y: " + event.offsetY)
+	    }
         },
 	changePicture() {
-	    console.log(this.pictindex)
-	    
+	    //console.log(this.pictindex)
 	    let urlpref = "https://plantdata.fermata.tech:5498/api/v1/p/"
-	    //let linklist = []
 	    this.imagesrc = []
 	    this.pictures[this.pictindex].map( p => {
-		console.log(p)
+		//console.log(p)
 		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD/MM/YY HH:mm")
 		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "label": p[2]})
 	    })
