@@ -20,7 +20,7 @@
       </ul>
       
       <span v-if="currentUser" class="navbar-text">
-	<span class="badge" style="background-color: #b4b5b4 !important;">{{ currentUser.name }}</span>
+	<span class="badge" style="background-color: #b4b5b4 !important;">{{ currentUser.login }}</span>
       </span>
     </div>
   </nav>
