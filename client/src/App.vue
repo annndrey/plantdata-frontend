@@ -31,6 +31,7 @@ export default {
 		this.$router.push('/login')
 	    } else {
 		this.$store.dispatch('login')
+		this.$cookie.set('auth', localStorage.token, 1)
 	    }
 	}
     },

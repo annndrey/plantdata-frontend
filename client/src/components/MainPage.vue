@@ -27,7 +27,7 @@
     
     <div class="row">
       <div class="col-md-6" v-for="pct in imagesrc">
-	<img :src="pct[1]" width="100%"> {{pct[0]}}
+	<img :src="pct.url" width="100%"> {{pct.pictdate}} {{pct.label}}
       </div>
     </div>
     <p v-if="loading"><img class="loading" src="@/assets/crone.png" height="40px"></p>
@@ -95,8 +95,9 @@ export default {
 	    //let linklist = []
 	    this.imagesrc = []
 	    this.pictures[this.pictindex].map( p => {
+		console.log(p)
 		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD/MM/YY HH:mm")
-		this.imagesrc.push([correctdate, urlpref+p[1]])
+		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "label": p[2]})
 	    })
 	    //this. imagesrc = urlpref + this.pictures[this.pictindex][1]
 	    //this.imglabel = this.pictures[this.pictindex][0][0]
@@ -151,7 +152,7 @@ export default {
 		    this.wght0.push(obj.wght0)
 		    let pictlist = []
 		    obj.pictures.map( p => {
-			pictlist.push([obj.ts,  p.fpath])
+			pictlist.push([obj.ts,  p.fpath, p.label])
 		    })
 		    this.pictures.push(pictlist)
 		}
