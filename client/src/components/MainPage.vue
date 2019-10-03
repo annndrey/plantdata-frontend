@@ -107,13 +107,14 @@ export default {
 	    //console.log(this.pictindex)
 	    let urlpref = "https://plantdata.fermata.tech:5498/api/v1/p/"
 	    this.imagesrc = []
+	    
 	    this.pictures[this.pictindex].map( p => {
-		//console.log(p)
 		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD/MM/YY HH:mm")
 		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "label": p[2]})
 	    })
-	    //this. imagesrc = urlpref + this.pictures[this.pictindex][1]
-	    //this.imglabel = this.pictures[this.pictindex][0][0]
+	    
+	    this.imagesrc.sort((a,b) => (a.label > b.label) ? 1 : -1) 
+	    
 
 	},
 	fetchSensors() {
