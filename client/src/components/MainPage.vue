@@ -26,7 +26,7 @@
     </div>
     
     <div class="row">
-      <div class="col-md-6" v-for="pct in imagesrc">
+      <div class="col-md-6" v-for="pct in imagesrc" >
 	<img :src="pct.url" width="100%" @mouseenter="mouseEnter"" @mouseleave="mouseLeave"> {{pct.pictdate}} {{pct.label}}
       </div>
     </div>
@@ -104,15 +104,12 @@ export default {
 	    }
         },
 	changePicture() {
-	    //console.log(this.pictindex)
 	    let urlpref = "https://plantdata.fermata.tech:5498/api/v1/p/"
 	    this.imagesrc = []
-	    
 	    this.pictures[this.pictindex].map( p => {
 		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD/MM/YY HH:mm")
-		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "label": p[2]})
+		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "label": decodeURI(p[2])})
 	    })
-	    
 	    this.imagesrc.sort((a,b) => (a.label > b.label) ? 1 : -1) 
 	    
 
