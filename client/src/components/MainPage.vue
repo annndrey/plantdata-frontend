@@ -18,7 +18,7 @@
       <div class="col-md-12">
 	<form>
 	  <div class="form-group">
-	    <label for="formControlRange">Captured pictures</label>
+	    <label for="formControlRange">Captured pictures ({{imgcount}})</label>
 	    <input type="range" v-model="pictindex" @change="changePicture" min="0" :max="imgcount-1"  class="form-control-range" id="formControlRange">
 	  </div>
 	</form>
@@ -106,6 +106,7 @@ export default {
 	changePicture() {
 	    let urlpref = "https://plantdata.fermata.tech:5498/api/v1/p/"
 	    this.imagesrc = []
+	    console.log(this.pictures)
 	    this.pictures[this.pictindex].map( p => {
 		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD/MM/YY HH:mm")
 		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "label": decodeURI(p[2])})
@@ -165,7 +166,10 @@ export default {
 		    obj.pictures.map( p => {
 			pictlist.push([obj.ts,  p.fpath, p.label])
 		    })
-		    this.pictures.push(pictlist)
+		    if (pictlist.length > 0) {
+			this.pictures.push(pictlist)
+		    }
+		    
 		}
 				   )
 		
