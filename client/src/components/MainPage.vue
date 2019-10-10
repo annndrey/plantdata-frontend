@@ -148,6 +148,10 @@ export default {
 		this.tempA = []
 		this.co2 = []
 		this.wght0 = []
+		this.wght1 = []
+		this.wght2 = []
+		this.wght3 = []
+		this.wght4 = []
 		this.imgcount = 0
 		this.pictindex = 0
 		this.sensordata.map(obj => {
@@ -162,6 +166,10 @@ export default {
 		    this.tempA.push(obj.tempA)
 		    this.co2.push(obj.co2)
 		    this.wght0.push(obj.wght0)
+		    this.wght1.push(obj.wght1)
+		    this.wght2.push(obj.wght2)
+		    this.wght3.push(obj.wght3)
+		    this.wght4.push(obj.wght4)
 		    let pictlist = []
 		    obj.pictures.map( p => {
 			pictlist.push([obj.ts,  p.fpath, p.label])
@@ -333,6 +341,86 @@ export default {
 				    pointRadius: 1,
 				    pointHitRadius: 10,
 				    data: this.wght0,
+				    spanGaps: false
+				   })
+		this.datasets.push({label: "WGHT1",
+				    lineTension: 0.1,
+				    backgroundColor: "rgba(204, 153, 0, 0.2)",
+				    borderColor: "rgba(204, 153, 0,1)",
+				    borderCapStyle: 'butt',
+				    borderDash: [],
+				    borderDashOffset: 0.0,
+				    borderJoinStyle: 'miter',
+				    pointBorderColor: "204, 153, 0,1)",
+				    pointBackgroundColor: "#fff",
+				    pointBorderWidth: 1,
+				    pointHoverRadius: 5,
+				    pointHoverBackgroundColor: "rgba(204, 153, 0,1)",
+				    pointHoverBorderColor: "rgba(220,220,220,1)",
+				    pointHoverBorderWidth: 2,
+				    pointRadius: 1,
+				    pointHitRadius: 10,
+				    data: this.wght1,
+				    spanGaps: false
+				   })
+		this.datasets.push({label: "WGHT2",
+				    lineTension: 0.1,
+				    backgroundColor: "rgba(204, 102, 0, 0.2)",
+				    borderColor: "rgba(204, 102, 0,1)",
+				    borderCapStyle: 'butt',
+				    borderDash: [],
+				    borderDashOffset: 0.0,
+				    borderJoinStyle: 'miter',
+				    pointBorderColor: "204, 102, 0,1)",
+				    pointBackgroundColor: "#fff",
+				    pointBorderWidth: 1,
+				    pointHoverRadius: 5,
+				    pointHoverBackgroundColor: "rgba(204, 102, 0,1)",
+				    pointHoverBorderColor: "rgba(220,220,220,1)",
+				    pointHoverBorderWidth: 2,
+				    pointRadius: 1,
+				    pointHitRadius: 10,
+				    data: this.wght2,
+				    spanGaps: false
+				   })
+		this.datasets.push({label: "WGHT3",
+				    lineTension: 0.1,
+				    backgroundColor: "rgba(204, 51, 0, 0.2)",
+				    borderColor: "rgba(204, 51, 0,1)",
+				    borderCapStyle: 'butt',
+				    borderDash: [],
+				    borderDashOffset: 0.0,
+				    borderJoinStyle: 'miter',
+				    pointBorderColor: "204, 51, 0,1)",
+				    pointBackgroundColor: "#fff",
+				    pointBorderWidth: 1,
+				    pointHoverRadius: 5,
+				    pointHoverBackgroundColor: "rgba(204, 51, 0,1)",
+				    pointHoverBorderColor: "rgba(220,220,220,1)",
+				    pointHoverBorderWidth: 2,
+				    pointRadius: 1,
+				    pointHitRadius: 10,
+				    data: this.wght3,
+				    spanGaps: false
+				   })
+		this.datasets.push({label: "WGHT4",
+				    lineTension: 0.1,
+				    backgroundColor: "rgba(204, 0, 0, 0.2)",
+				    borderColor: "rgba(204, 0, 0,1)",
+				    borderCapStyle: 'butt',
+				    borderDash: [],
+				    borderDashOffset: 0.0,
+				    borderJoinStyle: 'miter',
+				    pointBorderColor: "204, 0, 0,1)",
+				    pointBackgroundColor: "#fff",
+				    pointBorderWidth: 1,
+				    pointHoverRadius: 5,
+				    pointHoverBackgroundColor: "rgba(204, 0, 0,1)",
+				    pointHoverBorderColor: "rgba(220,220,220,1)",
+				    pointHoverBorderWidth: 2,
+				    pointRadius: 1,
+				    pointHitRadius: 10,
+				    data: this.wght4,
 				    spanGaps: false
 				   })
 
