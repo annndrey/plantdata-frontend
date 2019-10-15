@@ -11,10 +11,12 @@ import router from './router'
 import store from './store'
 import 'chart.js'
 import 'hchs-vue-charts'
+import VCalendar from 'v-calendar';
 
 var VueCookie = require('vue-cookie');
 
 Vue.use(window.VueCharts)
+Vue.use(VCalendar)
 Vue.config.productionTip = false
 // Setting up Axios on Vue Instance, for use via this.$axios
 Vue.prototype.$axios = axios.create(axiosConfig);
@@ -29,9 +31,7 @@ Vue.use(require('vue-moment'), {
 })
 Vue.use(VueFlashMessage, { timeout: 2000 });
 Vue.use(VueCookie);
-//new Vue({
-//  render: function (h) { return h(App) },
-//}).$mount('#app')
+
 
 new Vue({
     el: '#app',

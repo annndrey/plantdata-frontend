@@ -14,6 +14,7 @@ import Navbar from '@/components/Navbar'
 import Foot from '@/components/Foot'
 import { mapGetters } from 'vuex'
 
+ 
 export default {
     name: 'other',
     computed: {
@@ -37,7 +38,7 @@ export default {
     },
   components: {
       Navbar,
-      Foot
+      Foot,
   }
 }
 </script>

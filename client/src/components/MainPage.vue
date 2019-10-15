@@ -10,9 +10,20 @@
       </div>
     </div>
     <div class="row">
-      <div class="col-md-12">
+      <div class="col-md-9">
 	<chartjs-line :labels="labels" :bind="true" :datasets="datasets" ></chartjs-line>
       </div>
+      <div class="col-md-3">
+	{{daterange.start | moment_filter}} {{daterange.end | moment_filter}}
+	<v-date-picker
+	  mode="range"
+	  v-model="daterange"
+	  locale="en"
+	  firstDayOfWeek="2"
+	  is-inline
+	  />
+      </div>
+
     </div>
     <div class="row">
       <div class="col-md-12">
@@ -38,7 +49,6 @@
 <script>
 import moment from 'moment'
 import { mapGetters } from 'vuex'
-
 export default {
     name: 'MainPage',
     data: function() {
@@ -47,6 +57,7 @@ export default {
 	    loading: false,
 	    sensors: null,
 	    sensordata: null,
+	    daterange: {'start': new Date(), 'end': new Date()},
 	    hum0: null,
 	    hum1: null,
 	    temp0: null,
@@ -62,6 +73,7 @@ export default {
 	    pictures: [],
 	    imagesrc: [],
 	    imglabel: null,
+	    currentuuid: null,
 	    customoptions: {
                 responsive:true,
                 maintainAspectRatio:true,
@@ -88,15 +100,24 @@ export default {
     computed: {
 	...mapGetters({ currentUser: 'currentUser'})
     },
+    watch: {
+	'daterange': function(val, oldval) {
+	    this.showDataByDate(val)
+   	}
+    },
     methods: {
+	
+	moment_filter(date) {
+	    return moment(date).utcOffset("+00:00").format("DD-MM-YYYY")
+	},
 	mouseEnter(event) {
 	    this.trackcoords = true
 	    console.log("start coords tracking")
-            this.$el.addEventListener('mousemove', this.mouseMove, false)
+	    this.$el.addEventListener('mousemove', this.mouseMove, false)
         },
         mouseLeave(event) {
 	    console.log("stop coords tracking")
-            this.trackcoords = false;
+	    this.trackcoords = false;
         },
         mouseMove(event) {
 	    if (this.trackcoords) {
@@ -113,15 +134,27 @@ export default {
 	    })
 	    this.imagesrc.sort((a,b) => (a.label > b.label) ? 1 : -1) 
 	    
-
+	    
 	},
 	fetchSensors() {
 	    this.$axios.get(this.$backendhost+'sensors')
 		.then(request => this.setData('sensors', request))
 		.catch(request => console.log(request))
-
+	    
+	},
+	showDataByDate(curdate) {
+	    let params = {'params': {'uuid': this.currentuuid,
+				     'datefrom': moment(curdate.start).utcOffset("+03:00").format("DD-MM-YYYY"),
+				     'dateto': moment(curdate.end).utcOffset("+03:00").format("DD-MM-YYYY")
+				    }
+			 }
+	    this.$axios.get(this.$backendhost+'data', params)
+		.then(request => this.setData('data', request))
+		.catch(request => console.log(request))
+	    
 	},
 	showData(suuid) {
+	    this.currentuuid = suuid
 	    let params = {'params': {'uuid': suuid}}
 	    this.$axios.get(this.$backendhost+'data', params)
 		.then(request => this.setData('data', request))
