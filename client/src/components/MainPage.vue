@@ -14,10 +14,11 @@
 	<chartjs-line :labels="labels" :bind="true" :datasets="datasets" ></chartjs-line>
       </div>
       <div class="col-md-3">
-	{{daterange.start | moment_filter}} {{daterange.end | moment_filter}}
 	<v-date-picker
 	  mode="range"
 	  v-model="daterange"
+	  :min-date="mindate"
+	  :max-date="maxdate"
 	  locale="en"
 	  firstDayOfWeek="2"
 	  is-inline
@@ -58,6 +59,8 @@ export default {
 	    sensors: null,
 	    sensordata: null,
 	    daterange: {'start': new Date(), 'end': new Date()},
+	    mindate: null,
+	    maxdate: null,
 	    hum0: null,
 	    hum1: null,
 	    temp0: null,
@@ -169,7 +172,9 @@ export default {
 		this.labels.splice(0, this.labels.length)
 		this.datasets.splice(0, this.datasets.length)
 		this.pictures.splice(0, this.pictures.length)
-		this.sensordata = request.data
+		this.sensordata = request.data.data
+		this.mindate = request.data.mindate,
+		this.maxdate = request.data.maxdate,
 		this.imagesrc = ""
 		this.imglabel = ""
 		this.lux = []
