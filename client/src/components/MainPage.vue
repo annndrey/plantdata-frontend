@@ -5,7 +5,7 @@
     <div class="row">
       <div class="col-md-12">
 	<button v-for="sensor in sensors" type="button" class="btn btn-outline-secondary ml-2 mt-2" @click="showData(sensor.uuid)">
-	  Sensor {{sensor.uuid}}  <span class="badge badge-light">{{sensor.numrecords > 0 ? sensor.numrecords + " records" : ""}}</span>
+	  Sensor {{sensor.id}} <small>{{sensor.mindate|moment_filter}} - {{sensor.maxdate|moment_filter}}</small>  <span class="badge badge-light ml-2 align-middle">{{sensor.numrecords > 0 ? sensor.numrecords + " records" : ""}}</span>
 	</button>
       </div>
     </div>
@@ -108,11 +108,13 @@ export default {
 	    this.showDataByDate(val)
    	}
     },
-    methods: {
-	
-	moment_filter(date) {
-	    return moment(date).utcOffset("+00:00").format("DD-MM-YYYY")
+    filters: {
+	moment_filter: function(date) {
+	    let newdate = moment(date).utcOffset("+00:00").format("DD-MM-YYYY HH:mm")
+	    return newdate
 	},
+    },
+    methods: {
 	mouseEnter(event) {
 	    this.trackcoords = true
 	    console.log("start coords tracking")
