@@ -9,7 +9,7 @@
 	</button>
       </div>
     </div>
-    <div class="row">
+    <div class="row" v-if="sensordata">
       <div class="col-md-9">
 	<chartjs-line :labels="labels" :bind="true" :datasets="datasets" ></chartjs-line>
       </div>
@@ -23,10 +23,11 @@
 	  firstDayOfWeek="2"
 	  is-inline
 	  />
+	<button type="button" class="btn btn-secondary btn-lg btn-block mt-2" @click="downloadData()">Download data</button>
       </div>
-
+      
     </div>
-    <div class="row">
+    <div class="row" v-if="sensordata">
       <div class="col-md-12">
 	<form>
 	  <div class="form-group">
@@ -37,7 +38,7 @@
       </div>
     </div>
     
-    <div class="row">
+    <div class="row" v-if="sensordata">
       <div class="col-md-6" v-for="pct in imagesrc" >
 	<img :src="pct.url" width="100%" @mouseenter="mouseEnter"" @mouseleave="mouseLeave"> {{pct.pictdate}} {{pct.label}}
       </div>
@@ -146,6 +147,26 @@ export default {
 		.then(request => this.setData('sensors', request))
 		.catch(request => console.log(request))
 	    
+	},
+	downloadData() {
+	    let params = {'params': {'uuid': this.currentuuid,
+				     'datefrom': moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY"),
+				     'dateto': moment(this.daterange.end).utcOffset("+03:00").format("DD-MM-YYYY"),
+				     'export': 1
+				    },
+			  responseType: 'blob'
+			 }
+	    this.$axios.get(this.$backendhost+'data', params)
+		.then( response => {
+		    let blob = new Blob([response], { type: 'text/csv' })
+		    const url = window.URL.createObjectURL(new Blob([response.data]))
+		    const link = document.createElement('a')
+		    link.href = url
+		    link.setAttribute('download', 'data.csv')
+		    document.body.appendChild(link)
+		    link.click()
+		    link.removeAttribute("href")
+		})
 	},
 	showDataByDate(curdate) {
 	    let params = {'params': {'uuid': this.currentuuid,
