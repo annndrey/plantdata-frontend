@@ -38,8 +38,6 @@ new Vue({
     router,
     store,
     render: h => h(App)
-    //components: { App },
-    //template: '<App/>'
 }).$mount('#app')
 
 //window.appVue = new Vue({ router, store, render: (h) => h(App), }).$mount('#app');

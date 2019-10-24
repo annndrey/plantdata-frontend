@@ -9,16 +9,18 @@
 	</button>
       </div>
     </div>
-    <div class="row" v-if="sensordata">
+    <div class="row mt-2" v-if="sensordata">
       <div class="col-md-9">
 	<chartjs-line :labels="labels" :bind="true" :datasets="datasets" ></chartjs-line>
       </div>
       <div class="col-md-3">
 	<v-date-picker
 	  mode="range"
+	  style=".vc-container { background-color: '#2c3e50' !important;}"
 	  v-model="daterange"
 	  :min-date="mindate"
 	  :max-date="maxdate"
+	  color='gray'
 	  locale="en"
 	  firstDayOfWeek="2"
 	  is-inline
@@ -94,8 +96,7 @@ export default {
                         }
                     }]
                 }
-            }
-	    
+            },
  	}
     },
     created () {
@@ -233,7 +234,8 @@ export default {
 		    this.wght4.push(obj.wght4)
 		    let pictlist = []
 		    obj.pictures.map( p => {
-			pictlist.push([obj.ts,  p.fpath, p.label])
+			//let pict_url = p.thumbnail ? p.thumbnail : p.fpath
+			pictlist.push([obj.ts,  p.preview, p.label])
 		    })
 		    if (pictlist.length > 0) {
 			this.pictures.push(pictlist)
@@ -495,7 +497,7 @@ export default {
 </script>
 
 
-<style>
+<style >
   .fade-enter-active, .fade-leave-active {
   transition: opacity .5s;
   }
@@ -538,4 +540,5 @@ export default {
   @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
   @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
   @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+  
 </style>
