@@ -11,7 +11,7 @@
     </div>
     <div class="row mt-2" v-if="sensordata">
       <div class="col-md-9">
-	<chartjs-line :labels="labels" :bind="true" :datasets="datasets" ></chartjs-line>
+	<chartjs-line :option="plot_options" :labels="labels" :bind="true" :datasets="datasets" ></chartjs-line>
       </div>
       <div class="col-md-3">
 	<v-date-picker
@@ -72,6 +72,46 @@ export default {
 	    lux: null,
 	    whgt0: null,
 	    plotdata: null,
+	    plot_options: {
+		responsive: true,
+		tooltips: {
+		    enabled: true,
+		    callbacks: {
+			title: function(tooltipItem, data) {
+			    var title = moment(tooltipItem[0].label).utcOffset("+00:00").format("DD-MM-YY HH:mm")
+			    return title
+			}
+		    }
+		},
+		title:{
+                    display: true,
+                    text:'Sensors data'
+		},
+		scales: {
+		    xAxes: [{
+			type: 'time',
+			ticks: {
+			    autoSkip: true,
+			    maxTicksLimit: 30
+			},
+			time: {
+			    unit: 'minute',
+			    unitStepSize: 30,
+			    displayFormats: {
+				minute: 'DD/MM/YY HH:mm'
+			    }
+			},
+			display: true
+		    }],
+		    yAxes: [{
+			display: true,
+			scaleLabel: {
+			    display: true,
+			    labelString: 'Value'
+			}
+		    }]
+		}
+	    },
 	    labels: [],
 	    dataset: [],
 	    datasets: [],
@@ -136,7 +176,7 @@ export default {
 	    this.imagesrc = []
 	    console.log(this.pictures)
 	    this.pictures[this.pictindex].map( p => {
-		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD/MM/YY HH:mm")
+		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD-MM-YY HH:mm")
 		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "label": decodeURI(p[2])})
 	    })
 	    this.imagesrc.sort((a,b) => (a.label > b.label) ? 1 : -1) 
@@ -150,10 +190,12 @@ export default {
 	    
 	},
 	downloadData() {
+  
 	    let params = {'params': {'uuid': this.currentuuid,
 				     'datefrom': moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY"),
 				     'dateto': moment(this.daterange.end).utcOffset("+03:00").format("DD-MM-YYYY"),
-				     'export': 1
+				     'export': 1,
+				     //'fill_date': 1
 				    },
 			  responseType: 'blob'
 			 }
@@ -172,7 +214,8 @@ export default {
 	showDataByDate(curdate) {
 	    let params = {'params': {'uuid': this.currentuuid,
 				     'datefrom': moment(curdate.start).utcOffset("+03:00").format("DD-MM-YYYY"),
-				     'dateto': moment(curdate.end).utcOffset("+03:00").format("DD-MM-YYYY")
+				     'dateto': moment(curdate.end).utcOffset("+03:00").format("DD-MM-YYYY"),
+				     //'fill_date': 1
 				    }
 			 }
 	    this.$axios.get(this.$backendhost+'data', params)
@@ -182,7 +225,13 @@ export default {
 	},
 	showData(suuid) {
 	    this.currentuuid = suuid
-	    let params = {'params': {'uuid': suuid}}
+	    console.log(this.currentuuid)
+
+	    let params = {'params':
+			  {'uuid': suuid,
+			   //'fill_date': 1
+			  }
+			 }
 	    this.$axios.get(this.$backendhost+'data', params)
 		.then(request => this.setData('data', request))
 		.catch(request => console.log(request))
@@ -217,9 +266,10 @@ export default {
 		this.imgcount = 0
 		this.pictindex = 0
 		this.sensordata.map(obj => {
-		    let correctdate = moment(obj.ts).utcOffset("+00:00").format("DD/MM/YY HH:mm")
+		    //let correctdate = moment(obj.ts).utcOffset("+00:00")//.format("DD-MM-YY HH:mm")
 		    //this.temperatures[obj.ts] = obj.lux
-		    this.labels.push(correctdate)
+		    //this.labels.push(correctdate)
+		    this.labels.push(obj.ts)
 		    this.lux.push(obj.lux)
 		    this.hum0.push(obj.hum0)
 		    this.hum1.push(obj.hum1)
@@ -261,7 +311,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(207, 218, 245,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.lux,
 				    spanGaps: false
@@ -281,7 +331,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(75,192,192,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.hum0,
 				    spanGaps: false
@@ -301,7 +351,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(117,233,239,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.hum1,
 				    spanGaps: false
@@ -321,7 +371,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(239, 117, 172,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.temp0,
 				    spanGaps: false
@@ -341,7 +391,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(226, 130, 173,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.temp1,
 				    spanGaps: false
@@ -361,7 +411,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(226, 132, 179,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.tempA,
 				    spanGaps: false
@@ -381,7 +431,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(164, 168, 50,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.co2,
 				    spanGaps: false
@@ -401,7 +451,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(181, 34, 226,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.wght0,
 				    spanGaps: false
@@ -421,7 +471,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(204, 153, 0,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.wght1,
 				    spanGaps: false
@@ -441,7 +491,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(204, 102, 0,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.wght2,
 				    spanGaps: false
@@ -461,7 +511,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(204, 51, 0,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.wght3,
 				    spanGaps: false
@@ -481,7 +531,7 @@ export default {
 				    pointHoverBackgroundColor: "rgba(204, 0, 0,1)",
 				    pointHoverBorderColor: "rgba(220,220,220,1)",
 				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
+				    pointRadius: 2,
 				    pointHitRadius: 10,
 				    data: this.wght4,
 				    spanGaps: false
