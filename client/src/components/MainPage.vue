@@ -93,7 +93,11 @@ export default {
 			type: 'time',
 			ticks: {
 			    autoSkip: true,
-			    maxTicksLimit: 30
+			    maxTicksLimit: 30,
+			    callback: function(value, index, values) {
+				let newdate = moment(value, 'DD/MM/YYYY HH:mm').utcOffset("+00:00").format("DD/MM/YY HH:mm")
+				return newdate
+			    }
 			},
 			time: {
 			    unit: 'minute',
@@ -133,7 +137,7 @@ export default {
                     yAxes: [{
                         display: true,
                         ticks: {
-                            beginAtZero:true,
+                            beginAtZero: true,
                         }
                     }]
                 }
@@ -267,7 +271,7 @@ export default {
 		this.imgcount = 0
 		this.pictindex = 0
 		this.sensordata.map(obj => {
-		    //let correctdate = moment(obj.ts).utcOffset("+00:00")//.format("DD-MM-YY HH:mm")
+		    //let correctdate = moment(obj.ts).utcOffset("-00:00").format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
 		    //this.temperatures[obj.ts] = obj.lux
 		    //this.labels.push(correctdate)
 		    this.labels.push(obj.ts)
