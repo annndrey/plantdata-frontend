@@ -42,7 +42,13 @@
     
     <div class="row" v-if="sensordata">
       <div class="col-md-6" v-for="pct in imagesrc" >
-	<img :src="pct.url" width="100%" @mouseenter="mouseEnter"" @mouseleave="mouseLeave"> {{pct.pictdate}} {{pct.label}}
+	<img :src="pct.url" width="100%">
+	<p>
+	  <button type="button" class="btn btn-secondary btn-sm btn-block  mt-2" @click.prevent="downloadFullsize(pct.orig)">Fullsize</button>
+	</p>
+	<p>
+	  {{pct.pictdate}} {{pct.label}}
+	</p>
       </div>
     </div>
     <p v-if="loading"><img class="loading" src="@/assets/crone.png" height="40px"></p>
@@ -162,6 +168,18 @@ export default {
 	},
     },
     methods: {
+	downloadFullsize(url) {
+	    this.$axios.get(url, { responseType: 'blob' })
+		.then(({ data }) => {
+		    const blob = new Blob([data], { type: 'image/jpeg' })
+		    let link = document.createElement('a')
+		    let fname = url.split("/").pop()
+		    link.href = window.URL.createObjectURL(blob)
+		    link.download = fname
+		    link.click()
+		})
+		.catch(error => console.error(error))
+	},
 	mouseEnter(event) {
 	    this.trackcoords = true
 	    console.log("start coords tracking")
@@ -179,10 +197,10 @@ export default {
 	changePicture() {
 	    let urlpref = "https://plantdata.fermata.tech:5498/api/v1/p/"
 	    this.imagesrc = []
-	    console.log(this.pictures)
+	    //console.log(this.pictures)
 	    this.pictures[this.pictindex].map( p => {
 		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD-MM-YY HH:mm")
-		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "label": decodeURI(p[2])})
+		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "orig": urlpref+p[3], "label": decodeURI(p[2])})
 	    })
 	    this.imagesrc.sort((a,b) => (a.label > b.label) ? 1 : -1) 
 	    
@@ -290,7 +308,7 @@ export default {
 		    let pictlist = []
 		    obj.pictures.map( p => {
 			//let pict_url = p.thumbnail ? p.thumbnail : p.fpath
-			pictlist.push([obj.ts,  p.preview, p.label])
+			pictlist.push([obj.ts,  p.preview, p.label, p.original])
 		    })
 		    if (pictlist.length > 0) {
 			this.pictures.push(pictlist)
