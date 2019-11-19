@@ -39,9 +39,26 @@
 	</form>
       </div>
     </div>
-    
+
     <div class="row" v-if="sensordata">
-      <div class="col-md-6" v-for="pct in imagesrc" >
+      <div class="accordion" id="accordionClass">
+	<div class="card" v-for="cam, index in imagesrc">
+	  <div class="card-header" :id="'camheader' + index" :key="'cam-' + index">
+	    <h2 class="mb-0">
+              <button class="btn btn-link" type="button" data-toggle="collapse" :data-target="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index">
+		Camera {{cam.camlabel}}
+              </button>
+	    </h2>
+	  </div>
+	  <div :id="'collapse'+index" class="collapse" :aria-labelledby="'camheader'+index" data-parent="#accordionClass">
+	    <div class="card-body">
+              {{cam.positions}}
+	    </div>
+	  </div>
+	</div>  
+      </div>
+	
+      <!--<div class="col-md-6" v-for="pct in imagesrc" >
 	<img :src="pct.url" width="100%">
 	<p>
 	  <button type="button" class="btn btn-secondary btn-sm btn-block  mt-2" @click.prevent="downloadFullsize(pct.orig)">Fullsize</button>
@@ -50,7 +67,19 @@
 	  {{pct.pictdate}} {{pct.label}}
 	</p>
       </div>
+      -->
     </div>
+    <!--
+    <div class="row" v-if="sensordata">
+      <div class="col-md-12" v-for="cam in camerasrc">
+	{{cam.camlabel}}
+	<p v-for="pos in cam.positions">
+	  {{pos.poslabel}}
+	  {{pos.picture}}
+	</p>
+      </div>
+    </div>
+    -->
     <p v-if="loading"><img class="loading" src="@/assets/crone.png" height="40px"></p>
   </div>
 </div>
@@ -198,11 +227,15 @@ export default {
 	    let urlpref = "https://plantdata.fermata.tech:5498/api/v1/p/"
 	    this.imagesrc = []
 	    //console.log(this.pictures)
-	    this.pictures[this.pictindex].map( p => {
-		let correctdate = moment(p[0]).utcOffset("+00:00").format("DD-MM-YY HH:mm")
-		this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "orig": urlpref+p[3], "label": decodeURI(p[2])})
-	    })
-	    this.imagesrc.sort((a,b) => (a.label > b.label) ? 1 : -1) 
+	    this.imagesrc = this.pictures[this.pictindex]
+	    //.map( p => {
+	    //let correctdate = moment(p[0]).utcOffset("+00:00").format("DD-MM-YY HH:mm")
+	    //this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "orig": urlpref+p[3], "label": decodeURI(p[2])})
+	    //})
+	    //this.imagesrc.sort((a,b) => (a.label > b.label) ? 1 : -1) 
+	    // cameras
+	    //this.camerasrc = []
+	    //this.camerasrc = this.cameras[this.pictindex]
 	    
 	    
 	},
@@ -305,15 +338,10 @@ export default {
 		    this.wght2.push(obj.wght2)
 		    this.wght3.push(obj.wght3)
 		    this.wght4.push(obj.wght4)
-		    let pictlist = []
-		    obj.pictures.map( p => {
-			//let pict_url = p.thumbnail ? p.thumbnail : p.fpath
-			pictlist.push([obj.ts,  p.preview, p.label, p.original])
-		    })
-		    if (pictlist.length > 0) {
-			this.pictures.push(pictlist)
+		    if (obj.cameras.length > 0) {
+			this.pictures.push(obj.cameras)
+			//this.cameras.push(obj.cameras)
 		    }
-		    
 		}
 				   )
 		
