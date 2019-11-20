@@ -1,4 +1,5 @@
 <template>
+  
 <div class="mainpage">
   <div class="container">
     <h4><flash-message transition-name="fade"></flash-message></h4>
@@ -41,25 +42,33 @@
     </div>
 
     <div class="row" v-if="sensordata">
-      <div class="accordion" id="accordionClass">
-	<div class="card" v-for="cam, index in imagesrc">
-	  <div class="card-header" :id="'camheader' + index" :key="'cam-' + index">
-	    <h2 class="mb-0">
-              <button class="btn btn-link" type="button" data-toggle="collapse" :data-target="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index">
-		Camera {{cam.camlabel}}
-              </button>
-	    </h2>
-	  </div>
-	  <div :id="'collapse'+index" class="collapse" :aria-labelledby="'camheader'+index" data-parent="#accordionClass">
-	    <div class="card-body">
-              {{cam.positions}}
+      <div class="col-md-12">
+	<div class="accordion" id="accordionClass">
+	  <div class="card" v-for="cam, index in imagesrc">
+	    <div class="card-header" :id="'camheader' + index" :key="'cam-' + index">
+	      <h2 class="mb-0">
+		<button class="btn btn-block" type="button" data-toggle="collapse" :data-target="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index">
+		  Camera {{cam.camlabel}}
+		</button>
+	      </h2>
 	    </div>
-	  </div>
-	</div>  
+	    <div :id="'collapse'+index" class="collapse" :aria-labelledby="'camheader'+index" data-parent="#accordionClass">
+	      <div class="card-body">
+		<div class="row">
+		  <div class="col-md-6 mt-3" v-for="pos in cam.positions">
+		    <span v-for="pict in pos.pictures" >
+		      <a type="button" class="btn btn-secondary btn-sm btn-block  mt-2" :href="pict.fpath" target="_blank">Fullsize</a>
+		      {{pos.poslabel}} {{pict.ts | moment_filter}} <img :src="pict.preview" width="100%">
+		    </span>
+		  </div>
+		</div>
+	      </div>
+	    </div>
+	  </div>  
+	</div>
       </div>
-	
+      
       <!--<div class="col-md-6" v-for="pct in imagesrc" >
-	<img :src="pct.url" width="100%">
 	<p>
 	  <button type="button" class="btn btn-secondary btn-sm btn-block  mt-2" @click.prevent="downloadFullsize(pct.orig)">Fullsize</button>
 	</p>
