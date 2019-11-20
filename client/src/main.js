@@ -12,6 +12,9 @@ import store from './store'
 import 'chart.js'
 import 'hchs-vue-charts'
 import VCalendar from 'v-calendar';
+import Vue2Filters from 'vue2-filters'
+import _ from 'lodash'
+
 
 var VueCookie = require('vue-cookie');
 
@@ -22,7 +25,7 @@ Vue.config.productionTip = false
 Vue.prototype.$axios = axios.create(axiosConfig);
 Vue.prototype.$axios.defaults.headers.common.Authorization = `Bearer ${localStorage.getItem('token')}`;
 Vue.prototype.$backendhost = 'https://plantdata.fermata.tech:5498/api/v1/'
-
+Vue.prototype._ = _
 const moment = require('moment')
 require('moment/locale/ru')
 require('vue-flash-message/dist/vue-flash-message.min.css');
