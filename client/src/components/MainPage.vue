@@ -47,20 +47,20 @@
 	  <div class="card" v-for="cam, index in _.orderBy(imagesrc, 'camlabel')">
 	    <div class="card-header" :id="'camheader' + index" :key="'cam-' + index">
 	      <h2 class="mb-0">
-		<button class="btn btn-block" type="button" data-toggle="collapse" :data-target="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index">
+		<button class="btn btn-block" type="button" data-toggle="collapse" :data-target="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index" @click="fetchCameraData(cam, index)">
 		  Camera {{cam.camlabel}}
 		</button>
 	      </h2>
 	    </div>
 	    <div :id="'collapse'+index" class="collapse" :aria-labelledby="'camheader'+index" data-parent="#accordionClass">
 	      <div class="card-body">
-		<div class="row">
-		  <div class="col-md-6 mt-3" v-for="pos in _.orderBy(cam.positions, 'poslabel')">
-		    <span v-for="pict in pos.pictures" >
+		<div class="row" v-if="camera">
+		  <div class="col-md-6 mt-3" v-for="pos in _.orderBy(camera.positions, 'poslabel')">
+		    <p v-for="pict in pos.pictures" >
 		      <a type="button" class="btn btn-secondary btn-sm btn-block  mt-2" :href="pict.fpath" target="_blank">Fullsize</a>
 		      {{pos.poslabel}} {{pict.ts | moment_filter}} <img :src="pict.preview" width="100%">
 		      {{pict.results}}
-		    </span>
+		    </p>
 		  </div>
 		</div>
 	      </div>
@@ -68,28 +68,7 @@
 	  </div>  
 	</div>
       </div>
-      
-      <!--<div class="col-md-6" v-for="pct in imagesrc" >
-	<p>
-	  <button type="button" class="btn btn-secondary btn-sm btn-block  mt-2" @click.prevent="downloadFullsize(pct.orig)">Fullsize</button>
-	</p>
-	<p>
-	  {{pct.pictdate}} {{pct.label}}
-	</p>
-      </div>
-      -->
     </div>
-    <!--
-    <div class="row" v-if="sensordata">
-      <div class="col-md-12" v-for="cam in camerasrc">
-	{{cam.camlabel}}
-	<p v-for="pos in cam.positions">
-	  {{pos.poslabel}}
-	  {{pos.picture}}
-	</p>
-      </div>
-    </div>
-    -->
     <p v-if="loading"><img class="loading" src="@/assets/crone.png" height="40px"></p>
   </div>
 </div>
@@ -168,6 +147,8 @@ export default {
 	    pictindex: 0,
 	    pictures: [],
 	    imagesrc: [],
+	    camindex: null,
+	    camera: null,
 	    imglabel: null,
 	    currentuuid: null,
 	    customoptions: {
@@ -207,6 +188,15 @@ export default {
 	},
     },
     methods: {
+	fetchCameraData(cam, ind) {
+	    console.log('Fetch camera data', cam.id, ind)
+	    if ( ind != this.camindex ) {
+		this.camindex = ind
+		this.$axios.get(this.$backendhost+'cameras/'+cam.id)
+		    .then(request => this.setData('camera', request))
+		    .catch(request => console.log(request))
+	    }
+	},
 	downloadFullsize(url) {
 	    this.$axios.get(url, { responseType: 'blob' })
 		.then(({ data }) => {
@@ -307,6 +297,8 @@ export default {
 		this.sensors = request.data
 	    } else if (what == "image") {
 		this.imagesrc = request.data
+	    } else if (what == "camera") {
+		this.camera = request.data
 	    } else if (what == "data") {
 		this.labels.splice(0, this.labels.length)
 		this.datasets.splice(0, this.datasets.length)
