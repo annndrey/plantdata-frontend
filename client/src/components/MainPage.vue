@@ -59,6 +59,7 @@
 		    <span v-for="pict in pos.pictures" >
 		      <a type="button" class="btn btn-secondary btn-sm btn-block  mt-2" :href="pict.fpath" target="_blank">Fullsize</a>
 		      {{pos.poslabel}} {{pict.ts | moment_filter}} <img :src="pict.preview" width="100%">
+		      {{pict.results}}
 		    </span>
 		  </div>
 		</div>
