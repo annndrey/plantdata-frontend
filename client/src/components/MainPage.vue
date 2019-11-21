@@ -47,7 +47,7 @@
 	  <div class="card" v-for="cam, index in _.orderBy(imagesrc, 'camlabel')">
 	    <div class="card-header" :id="'camheader' + index" :key="'cam-' + index">
 	      <h2 class="mb-0">
-		<button class="btn btn-block" type="button" data-toggle="collapse" :data-target="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index" @click="fetchCameraData(cam, index)">
+		<button class="btn btn-block" type="button" data-toggle="collapse" :data-target="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index" @click="fetchCameraData(cam, index, 'N')">
 		  Camera {{cam.camlabel}}
 		</button>
 	      </h2>
@@ -188,14 +188,20 @@ export default {
 	},
     },
     methods: {
-	fetchCameraData(cam, ind) {
-	    console.log('Fetch camera data', cam.id, ind)
+	fetchCameraData(cam, ind, force) {
 	    if ( ind != this.camindex ) {
 		this.camindex = ind
+		console.log('Fetch camera data', cam.id, ind, force)
+		this.$axios.get(this.$backendhost+'cameras/'+cam.id)
+		    .then(request => this.setData('camera', request))
+		    .catch(request => console.log(request))
+	    } else if (force == 'F') {
+		console.log('Fetch camera data', cam.id, ind, force)
 		this.$axios.get(this.$backendhost+'cameras/'+cam.id)
 		    .then(request => this.setData('camera', request))
 		    .catch(request => console.log(request))
 	    }
+	    
 	},
 	downloadFullsize(url) {
 	    this.$axios.get(url, { responseType: 'blob' })
@@ -228,6 +234,13 @@ export default {
 	    this.imagesrc = []
 	    //console.log(this.pictures)
 	    this.imagesrc = this.pictures[this.pictindex]
+	    //if (this.camindex) {
+	    if (this.camindex !== null) {
+		console.log('Fetch from changePicture', this.camindex)
+		let cam = this.imagesrc[this.camindex]
+		this.fetchCameraData(cam, this.camindex, 'F')
+	    }
+	    //}
 	    //.map( p => {
 	    //let correctdate = moment(p[0]).utcOffset("+00:00").format("DD-MM-YY HH:mm")
 	    //this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "orig": urlpref+p[3], "label": decodeURI(p[2])})
