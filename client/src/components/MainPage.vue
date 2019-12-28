@@ -261,8 +261,8 @@ export default {
 	downloadData() {
 	    
 	    let params = {'params': {'uuid': this.currentuuid,
-				     'datefrom': moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY"),
-				     'dateto': moment(this.daterange.end).utcOffset("+03:00").format("DD-MM-YYYY"),
+				     'ts_from': moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm"),
+				     'ts_to': moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm"),
 				     'export': 1,
 				     //'fill_date': 1
 				    },
@@ -282,11 +282,12 @@ export default {
 	},
 	showDataByDate(curdate) {
 	    let params = {'params': {'uuid': this.currentuuid,
-				     'datefrom': moment(curdate.start).utcOffset("+03:00").format("DD-MM-YYYY"),
-				     'dateto': moment(curdate.end).utcOffset("+03:00").format("DD-MM-YYYY"),
+				     'ts_from': moment(curdate.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm"),
+				     'ts_to': moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm"),
 				     //'fill_date': 1
 				    }
 			 }
+	    console.log(params)
 	    this.$axios.get(this.$backendhost+'data', params)
 		.then(request => this.setData('data', request))
 		.catch(request => console.log(request))
