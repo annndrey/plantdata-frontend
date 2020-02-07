@@ -57,7 +57,7 @@
 		<div class="row" v-if="camera">
 		  <div class="col-md-6 mt-3" v-for="pos in _.orderBy(camera.positions, 'poslabel')">
 		    <p v-for="pict in pos.pictures" >
-		      <a type="button" class="btn btn-secondary btn-sm btn-block  mt-2" :href="pict.fpath" target="_blank">Fullsize</a>
+		      <a type="button" class="btn btn-secondary btn-sm btn-block  mt-2" :href="pict.original" target="_blank">Fullsize</a>
 		      {{pos.poslabel}} {{pict.ts | moment_filter}} <img :src="pict.preview" width="100%">
 		      {{pict.results}}
 		    </p>
