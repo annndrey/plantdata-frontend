@@ -5,9 +5,20 @@
     <h4><flash-message transition-name="fade"></flash-message></h4>
     <div class="row">
       <div class="col-md-12">
-	<button v-for="sensor in sensors" type="button" class="btn btn-outline-secondary ml-2 mt-2" @click="showData(sensor.uuid)">
-	  Sensor {{sensor.id}} <small>{{sensor.mindate|moment_filter}} - {{sensor.maxdate|moment_filter}}</small>  <span class="badge badge-light ml-2 align-middle">{{sensor.numrecords > 0 ? sensor.numrecords + " records" : ""}}</span>
-	</button>
+	<div class="row">
+	  <div class="col-md-12">
+	    <button v-for="sensor in sensors" type="button" class="btn btn-outline-secondary ml-2 mt-2" @click="showData(sensor.uuid)">
+	      Sensor Complex {{sensor.id}} <small>{{sensor.mindate|moment_filter}} - {{sensor.maxdate|moment_filter}}</small>  <span class="badge badge-light ml-2 align-middle">{{sensor.numrecords > 0 ? sensor.numrecords + " records" : ""}}</span>
+	    </button>
+	  </div>
+	</div>
+	<div class="row">
+	  <div class="col-md-12">
+	    <button v-for="probe in probes" type="button" class="btn btn-outline-secondary btn-sm ml-2 mt-2" @click="showProbeData(probe.uuid)">
+	      <small>probe {{probe.uuid}}</small>
+	    </button>
+	  </div>
+	</div>
       </div>
     </div>
     <div class="row mt-2" v-if="sensordata">
@@ -28,7 +39,6 @@
 	  />
 	<button type="button" class="btn btn-secondary btn-lg btn-block mt-2" @click="downloadData()">Download data</button>
       </div>
-      
     </div>
     <div class="row" v-if="sensordata">
       <div class="col-md-12">
@@ -86,6 +96,7 @@ export default {
 	    sensors: null,
 	    sensordata: null,
 	    daterange: {'start': new Date(), 'end': new Date()},
+	    currentdate: null,
 	    mindate: null,
 	    maxdate: null,
 	    hum0: null,
@@ -147,10 +158,12 @@ export default {
 	    pictindex: 0,
 	    pictures: [],
 	    imagesrc: [],
+	    probes: [],
 	    camindex: null,
 	    camera: null,
-	    imglabel: null,
-	    currentuuid: null,
+	    imglabOel: null,
+	    currentsuuid: null,
+	    currentpuuid: null,
 	    customoptions: {
                 responsive:true,
                 maintainAspectRatio:true,
@@ -185,7 +198,7 @@ export default {
 	moment_filter: function(date) {
 	    let newdate = moment(date).utcOffset("+00:00").format("DD-MM-YYYY HH:mm")
 	    return newdate
-	},
+	}
     },
     methods: {
 	fetchCameraData(cam, ind, force) {
@@ -230,7 +243,7 @@ export default {
 	    }
         },
 	changePicture() {
-	    let urlpref = "https://plantdata.fermata.tech:5498/api/v1/p/"
+	    let urlpref = this.$backendhost + "p/"
 	    this.imagesrc = []
 	    //console.log(this.pictures)
 	    this.imagesrc = this.pictures[this.pictindex]
@@ -258,9 +271,16 @@ export default {
 		.catch(request => console.log(request))
 	    
 	},
+	getSensorProbes() {
+	    let params = {'params': {'suuid': this.currentsuuid}}
+	    this.$axios.get(this.$backendhost+'probes', params)
+		.then(request => this.setData('probes', request))
+		.catch(request => console.log(request))
+	    
+	},
 	downloadData() {
 	    
-	    let params = {'params': {'uuid': this.currentuuid,
+	    let params = {'params': {'suuid': this.currentsuuid,
 				     'ts_from': moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm"),
 				     'ts_to': moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm"),
 				     'export': 1,
@@ -281,30 +301,53 @@ export default {
 		})
 	},
 	showDataByDate(curdate) {
-	    let params = {'params': {'uuid': this.currentuuid,
+	    let params = {'params': {'suuid': this.currentsuuid,
 				     'ts_from': moment(curdate.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm"),
 				     'ts_to': moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm"),
 				     //'fill_date': 1
 				    }
 			 }
 	    console.log(params)
+	    this.currentdate = this.daterange
 	    this.$axios.get(this.$backendhost+'data', params)
 		.then(request => this.setData('data', request))
 		.catch(request => console.log(request))
 	    
 	},
 	showData(suuid) {
-	    this.currentuuid = suuid
-	    console.log(this.currentuuid)
-	    
+	    this.currentsuuid = suuid
+	    console.log(this.currentsuuid)
+	    this.getSensorProbes()
 	    let params = {'params':
-			  {'uuid': suuid,
-			   //'fill_date': 1
+			  {'suuid': suuid,
 			  }
 			 }
+	    if (this.currentdate) {
+		params['params']['ts_from'] =  moment(this.currentdate.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm")
+		params['params']['ts_to'] = moment(this.currentdate.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm")
+	    }
+	    
 	    this.$axios.get(this.$backendhost+'data', params)
 		.then(request => this.setData('data', request))
 		.catch(request => console.log(request))
+	},
+	showProbeData(puuid) {
+	    this.currentpuuid = puuid
+	    if ( this.currentsuuid ) {
+		console.log(this.currentpuuid)
+		let params = {'params':
+			      {'suuid': this.currentsuuid,
+			       'puuid': puuid
+			      }
+			     }
+		if (this.daterange) {
+		    params['params']['ts_from'] =  moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm")
+		    params['params']['ts_to'] = moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm")
+		}
+		this.$axios.get(this.$backendhost+'data', params)
+		    .then(request => this.setData('data', request))
+		    .catch(request => console.log(request))
+	    }
 	},
 	setData(what, request) {
 	    if (what == "sensors") {
@@ -313,13 +356,16 @@ export default {
 		this.imagesrc = request.data
 	    } else if (what == "camera") {
 		this.camera = request.data
+	    } else if (what == "probes") {
+		this.probes = request.data
 	    } else if (what == "data") {
 		this.labels.splice(0, this.labels.length)
 		this.datasets.splice(0, this.datasets.length)
 		this.pictures.splice(0, this.pictures.length)
+
 		this.sensordata = request.data.data
-		this.mindate = request.data.mindate,
-		this.maxdate = request.data.maxdate,
+		this.mindate = request.data.mindate
+		this.maxdate = request.data.maxdate
 		this.imagesrc = ""
 		this.imglabel = ""
 		this.lux = []
@@ -337,284 +383,317 @@ export default {
 		this.wght4 = []
 		this.imgcount = 0
 		this.pictindex = 0
+
+		this.probedata = {}
+		
 		this.sensordata.map(obj => {
-		    //let correctdate = moment(obj.ts).utcOffset("-00:00").format("YYYY-MM-DDTHH:mm:ss.SSS[Z]")
-		    //this.temperatures[obj.ts] = obj.lux
-		    //this.labels.push(correctdate)
+		    obj.probes.map( probe => {
+			// if ( probe.uuid == "24:6F:28:97:0F:54" ) {
+			probe.values.map ( val => {
+			    let datalabel = probe.uuid + ' ' + val.label
+				if (this.probedata[datalabel]) {
+				    this.probedata[datalabel].values.push(val.value)
+				} else {
+				    var datavalues = new Object()
+				    datavalues.label = datalabel
+				    datavalues.values = []
+				    this.probedata[datalabel] = datavalues
+				}
+			    }
+					     )
+			//}
+		    }
+				  )
 		    this.labels.push(obj.ts)
-		    this.lux.push(obj.lux)
-		    this.hum0.push(obj.hum0)
-		    this.hum1.push(obj.hum1)
-		    this.temp0.push(obj.temp0)
-		    this.temp1.push(obj.temp1)
-		    this.tempA.push(obj.tempA)
-		    this.co2.push(obj.co2)
-		    this.wght0.push(obj.wght0)
-		    this.wght1.push(obj.wght1)
-		    this.wght2.push(obj.wght2)
-		    this.wght3.push(obj.wght3)
-		    this.wght4.push(obj.wght4)
 		    if (obj.cameras.length > 0) {
 			this.pictures.push(obj.cameras)
-			//this.cameras.push(obj.cameras)
 		    }
 		}
 				   )
+
+
+		console.log(Object.keys(this.probedata))
+
+		for (let key in this.probedata) {
+		    this.datasets.push({label: key,
+					fill: false,
+					lineTension: 0.1,
+					backgroundColor: "rgba(207, 218, 245, 0.3)",
+					borderColor: "rgba(207, 218, 245, 0.3)",
+					borderCapStyle: 'butt',
+					borderDash: [],
+					borderDashOffset: 0.0,
+					borderJoinStyle: 'miter',
+					pointBorderColor: "rgba(207, 218, 245, 0.7)",
+					pointBackgroundColor: "rgba(207, 218, 245, 0.7)",
+					pointBorderWidth: 1,
+					pointHoverRadius: 5,
+					pointHoverBackgroundColor: "rgba(207, 218, 245, 0.6)",
+					pointHoverBorderColor: "rgba(207, 218, 245, 0.6)",
+					pointHoverBorderWidth: 2,
+					pointRadius: 1,
+					pointHitRadius: 10,
+					data: this.probedata[key].values,
+					spanGaps: true
+				   })
+		}
 		
 		this.imgcount = this.pictures.length
 		
-		this.datasets.push({label: "LUX",
-				    fill: false,
-				    lineTension: 0.1,
-				    backgroundColor: "rgba(207, 218, 245, 0.3)",
-				    borderColor: "rgba(207, 218, 245, 0.3)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(207, 218, 245, 0.7)",
-				    pointBackgroundColor: "rgba(207, 218, 245, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(207, 218, 245, 0.6)",
-				    pointHoverBorderColor: "rgba(207, 218, 245, 0.6)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.lux,
-				    spanGaps: true
-				   })
-		this.datasets.push({label: "HUM0",
-				    lineTension: 0.1,
-				    fill: false,
-				    backgroundColor: "rgba(75, 192, 192, 0.2)",
-				    borderColor: "rgba(75, 192, 192, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(75, 192, 192, 0.7)",
-				    pointBackgroundColor: "rgba(75, 192, 192, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(75, 192, 192, 0.2)",
-				    pointHoverBorderColor: "rgba(75, 192, 192, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.hum0,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "HUM1",
-				    lineTension: 0.1,
-				    fill: false,
-				    backgroundColor: "rgba(117, 233, 239, 0.2)",
-				    borderColor: "rgba(117, 233, 239, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(117, 233, 239, 0.7)",
-				    pointBackgroundColor: "rgba(117, 233, 239, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(117, 233, 239, 0.2)",
-				    pointHoverBorderColor: "rgba(117, 233, 239, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.hum1,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "TEMP0",
-				    lineTension: 0.1,
-				    fill: false,
-				    backgroundColor: "rgba(239, 117, 172, 0.2)",
-				    borderColor: "rgba(239, 117, 172, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(239, 117, 172, 0.7)",
-				    pointBackgroundColor: "rgba(239, 117, 172, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(239, 117, 172, 0.2)",
-				    pointHoverBorderColor: "rgba(239, 117, 172, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.temp0,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "TEMP1",
-				    lineTension: 0.1,
-				    fill: false,
-				    backgroundColor: "rgba(226, 130, 173, 0.2)",
-				    borderColor: "rgba(226, 130, 173, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(226, 130, 173, 0.7)",
-				    pointBackgroundColor: "rgba(226, 130, 173, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(226, 130, 173, 0.2)",
-				    pointHoverBorderColor: "rgba(226, 130, 173, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.temp1,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "TEMPA",
-				    lineTension: 0.1,
-				    fill: false,
-				    backgroundColor: "rgba(226, 132, 179, 0.2)",
-				    borderColor: "rgba(226, 132, 179, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(226, 132, 179, 0.7)",
-				    pointBackgroundColor: "rgba(226, 132, 179, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(226, 132, 179, 0.2)",
-				    pointHoverBorderColor: "rgba(226, 132, 179, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.tempA,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "CO2",
-				    lineTension: 0.1,
-				    fill: false,
-				    backgroundColor: "rgba(164, 168, 50, 0.2)",
-				    borderColor: "rgba(164, 168, 50, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(164, 168, 50, 0.7)",
-				    pointBackgroundColor: "rgba(164, 168, 50, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(164, 168, 50, 0.2)",
-				    pointHoverBorderColor: "rgba(164, 168, 50, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.co2,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "WGHT0",
-				    lineTension: 0.1,
-				    fill: false, 
-				    backgroundColor: "rgba(181, 34, 226, 0.2)",
-				    borderColor: "rgba(181, 34, 226, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(181, 34, 226, 0.7)",
-				    pointBackgroundColor: "rgba(181, 34, 226, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(181, 34, 226, 0.2)",
-				    pointHoverBorderColor: "rgba(181, 34, 226, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.wght0,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "WGHT1",
-				    lineTension: 0.1,
-				    fill: false,
-				    backgroundColor: "rgba(204, 153, 0, 0.2)",
-				    borderColor: "rgba(204, 153, 0, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(204, 153, 0, 0.7)",
-				    pointBackgroundColor: "rgba(204, 153, 0, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(204, 153, 0, 0.2)",
-				    pointHoverBorderColor: "rgba(204, 153, 0, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.wght1,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "WGHT2",
-				    lineTension: 0.1,
-				    fill: false,
-				    backgroundColor: "rgba(204, 102, 0, 0.2)",
-				    borderColor: "rgba(204, 102, 0, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(204, 102, 0, 0.7)",
-				    pointBackgroundColor: "rgba(204, 102, 0, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(204, 102, 0, 0.2)",
-				    pointHoverBorderColor: "rgba(204, 102, 0, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.wght2,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "WGHT3",
-				    lineTension: 0.1,
-				    fill: false, 
-				    backgroundColor: "rgba(204, 51, 0, 0.2)",
-				    borderColor: "rgba(204, 51, 0, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(204, 51, 0, 0.7)",
-				    pointBackgroundColor: "rgba(204, 51, 0, 0.7)",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(204, 51, 0, 0.2)",
-				    pointHoverBorderColor: "rgba(220, 220, 220, 0.2)",
-				    pointHoverBorderWidth: 2,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.wght3,
-				    spanGaps: false
-				   })
-		this.datasets.push({label: "WGHT4",
-				    lineTension: 0.1,
-				    fill: false, 
-				    backgroundColor: "rgba(204, 0, 0, 0.2)",
-				    borderColor: "rgba(204, 0, 0, 0.1)",
-				    borderCapStyle: 'butt',
-				    borderDash: [],
-				    borderDashOffset: 0.0,
-				    borderJoinStyle: 'miter',
-				    pointBorderColor: "rgba(204, 0, 0, 0.7)",
-				    pointBackgroundColor: "rgba(204, 0, 0, 0.7",
-				    pointBorderWidth: 1,
-				    pointHoverRadius: 5,
-				    pointHoverBackgroundColor: "rgba(204, 0, 0, 0.2)",
-				    pointHoverBorderColor: "rgba(204, 0, 0, 0.2)",
-				    pointHoverBorderWidth: 1,
-				    pointRadius: 1,
-				    pointHitRadius: 10,
-				    data: this.wght4,
-				    spanGaps: false
-				   })
+		
+		//this.datasets.push({label: "LUX",
+		//		    fill: false,
+		//		    lineTension: 0.1,
+		//		    backgroundColor: "rgba(207, 218, 245, 0.3)",
+		//		    borderColor: "rgba(207, 218, 245, 0.3)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(207, 218, 245, 0.7)",
+		//		    pointBackgroundColor: "rgba(207, 218, 245, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(207, 218, 245, 0.6)",
+		//		    pointHoverBorderColor: "rgba(207, 218, 245, 0.6)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.datavalues.values,
+		//		    spanGaps: true
+		//		   })
+		//
+		//this.datasets.push({label: "HUM0",
+		//		    lineTension: 0.1,
+		//		    fill: false,
+		//		    backgroundColor: "rgba(75, 192, 192, 0.2)",
+		//		    borderColor: "rgba(75, 192, 192, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(75, 192, 192, 0.7)",
+		//		    pointBackgroundColor: "rgba(75, 192, 192, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(75, 192, 192, 0.2)",
+		//		    pointHoverBorderColor: "rgba(75, 192, 192, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.hum0,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "HUM1",
+		//		    lineTension: 0.1,
+		//		    fill: false,
+		//		    backgroundColor: "rgba(117, 233, 239, 0.2)",
+		//		    borderColor: "rgba(117, 233, 239, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(117, 233, 239, 0.7)",
+		//		    pointBackgroundColor: "rgba(117, 233, 239, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(117, 233, 239, 0.2)",
+		//		    pointHoverBorderColor: "rgba(117, 233, 239, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.hum1,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "TEMP0",
+		//		    lineTension: 0.1,
+		//		    fill: false,
+		//		    backgroundColor: "rgba(239, 117, 172, 0.2)",
+		//		    borderColor: "rgba(239, 117, 172, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(239, 117, 172, 0.7)",
+		//		    pointBackgroundColor: "rgba(239, 117, 172, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(239, 117, 172, 0.2)",
+		//		    pointHoverBorderColor: "rgba(239, 117, 172, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.temp0,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "TEMP1",
+		//		    lineTension: 0.1,
+		//		    fill: false,
+		//		    backgroundColor: "rgba(226, 130, 173, 0.2)",
+		//		    borderColor: "rgba(226, 130, 173, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(226, 130, 173, 0.7)",
+		//		    pointBackgroundColor: "rgba(226, 130, 173, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(226, 130, 173, 0.2)",
+		//		    pointHoverBorderColor: "rgba(226, 130, 173, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.temp1,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "TEMPA",
+		//		    lineTension: 0.1,
+		//		    fill: false,
+		//		    backgroundColor: "rgba(226, 132, 179, 0.2)",
+		//		    borderColor: "rgba(226, 132, 179, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(226, 132, 179, 0.7)",
+		//		    pointBackgroundColor: "rgba(226, 132, 179, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(226, 132, 179, 0.2)",
+		//		    pointHoverBorderColor: "rgba(226, 132, 179, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.tempA,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "CO2",
+		//		    lineTension: 0.1,
+		//		    fill: false,
+		//		    backgroundColor: "rgba(164, 168, 50, 0.2)",
+		//		    borderColor: "rgba(164, 168, 50, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(164, 168, 50, 0.7)",
+		//		    pointBackgroundColor: "rgba(164, 168, 50, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(164, 168, 50, 0.2)",
+		//		    pointHoverBorderColor: "rgba(164, 168, 50, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.co2,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "WGHT0",
+		//		    lineTension: 0.1,
+		//		    fill: false, 
+		//		    backgroundColor: "rgba(181, 34, 226, 0.2)",
+		//		    borderColor: "rgba(181, 34, 226, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(181, 34, 226, 0.7)",
+		//		    pointBackgroundColor: "rgba(181, 34, 226, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(181, 34, 226, 0.2)",
+		//		    pointHoverBorderColor: "rgba(181, 34, 226, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.wght0,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "WGHT1",
+		//		    lineTension: 0.1,
+		//		    fill: false,
+		//		    backgroundColor: "rgba(204, 153, 0, 0.2)",
+		//		    borderColor: "rgba(204, 153, 0, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(204, 153, 0, 0.7)",
+		//		    pointBackgroundColor: "rgba(204, 153, 0, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(204, 153, 0, 0.2)",
+		//		    pointHoverBorderColor: "rgba(204, 153, 0, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.wght1,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "WGHT2",
+		//		    lineTension: 0.1,
+		//		    fill: false,
+		//		    backgroundColor: "rgba(204, 102, 0, 0.2)",
+		//		    borderColor: "rgba(204, 102, 0, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(204, 102, 0, 0.7)",
+		//		    pointBackgroundColor: "rgba(204, 102, 0, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(204, 102, 0, 0.2)",
+		//		    pointHoverBorderColor: "rgba(204, 102, 0, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.wght2,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "WGHT3",
+		//		    lineTension: 0.1,
+		//		    fill: false, 
+		//		    backgroundColor: "rgba(204, 51, 0, 0.2)",
+		//		    borderColor: "rgba(204, 51, 0, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(204, 51, 0, 0.7)",
+		//		    pointBackgroundColor: "rgba(204, 51, 0, 0.7)",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(204, 51, 0, 0.2)",
+		//		    pointHoverBorderColor: "rgba(220, 220, 220, 0.2)",
+		//		    pointHoverBorderWidth: 2,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.wght3,
+		//		    spanGaps: false
+		//		   })
+		//this.datasets.push({label: "WGHT4",
+		//		    lineTension: 0.1,
+		//		    fill: false, 
+		//		    backgroundColor: "rgba(204, 0, 0, 0.2)",
+		//		    borderColor: "rgba(204, 0, 0, 0.1)",
+		//		    borderCapStyle: 'butt',
+		//		    borderDash: [],
+		//		    borderDashOffset: 0.0,
+		//		    borderJoinStyle: 'miter',
+		//		    pointBorderColor: "rgba(204, 0, 0, 0.7)",
+		//		    pointBackgroundColor: "rgba(204, 0, 0, 0.7",
+		//		    pointBorderWidth: 1,
+		//		    pointHoverRadius: 5,
+		//		    pointHoverBackgroundColor: "rgba(204, 0, 0, 0.2)",
+		//		    pointHoverBorderColor: "rgba(204, 0, 0, 0.2)",
+		//		    pointHoverBorderWidth: 1,
+		//		    pointRadius: 1,
+		//		    pointHitRadius: 10,
+		//		    data: this.wght4,
+		//		    spanGaps: false
+		//		   })
 
 		
 	    }
