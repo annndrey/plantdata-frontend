@@ -204,12 +204,12 @@ export default {
 	fetchCameraData(cam, ind, force) {
 	    if ( ind != this.camindex ) {
 		this.camindex = ind
-		console.log('Fetch camera data', cam.id, ind, force)
+		//console.log('Fetch camera data', cam.id, ind, force)
 		this.$axios.get(this.$backendhost+'cameras/'+cam.id)
 		    .then(request => this.setData('camera', request))
 		    .catch(request => console.log(request))
 	    } else if (force == 'F') {
-		console.log('Fetch camera data', cam.id, ind, force)
+		//console.log('Fetch camera data', cam.id, ind, force)
 		this.$axios.get(this.$backendhost+'cameras/'+cam.id)
 		    .then(request => this.setData('camera', request))
 		    .catch(request => console.log(request))
@@ -370,25 +370,12 @@ export default {
 		this.imglabel = ""
 		this.lux = []
 		this.labels = []
-		this.hum0 = []
-		this.hum1 = []
-		this.temp0 = []
-		this.temp1 = []
-		this.tempA = []
-		this.co2 = []
-		this.wght0 = []
-		this.wght1 = []
-		this.wght2 = []
-		this.wght3 = []
-		this.wght4 = []
 		this.imgcount = 0
 		this.pictindex = 0
-
 		this.probedata = {}
 		
 		this.sensordata.map(obj => {
 		    obj.probes.map( probe => {
-			// if ( probe.uuid == "24:6F:28:97:0F:54" ) {
 			probe.values.map ( val => {
 			    let datalabel = probe.uuid + ' ' + val.label
 				if (this.probedata[datalabel]) {
@@ -398,23 +385,23 @@ export default {
 				    datavalues.label = datalabel
 				    datavalues.values = []
 				    this.probedata[datalabel] = datavalues
+				    this.probedata[datalabel].values.push(val.value)
 				}
 			    }
 					     )
-			//}
 		    }
 				  )
+
 		    this.labels.push(obj.ts)
 		    if (obj.cameras.length > 0) {
 			this.pictures.push(obj.cameras)
 		    }
 		}
 				   )
-
-
-		console.log(Object.keys(this.probedata))
-
+		//console.log(Object.keys(this.probedata))
+		console.log(this.labels)
 		for (let key in this.probedata) {
+		    console.log(this.probedata[key].values.length)
 		    this.datasets.push({label: key,
 					fill: false,
 					lineTension: 0.1,
@@ -435,7 +422,7 @@ export default {
 					pointHitRadius: 10,
 					data: this.probedata[key].values,
 					spanGaps: true
-				   })
+				       })
 		}
 		
 		this.imgcount = this.pictures.length
