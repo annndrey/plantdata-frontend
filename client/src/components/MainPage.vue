@@ -401,6 +401,7 @@ export default {
 		    }
 		}
 				   )
+		
 		//console.log(Object.keys(this.probedata))
 		console.log(this.labels)
 		for (let key in this.probedata) {
@@ -424,7 +425,8 @@ export default {
 					pointRadius: 1,
 					pointHitRadius: 10,
 					data: this.probedata[key].values,
-					spanGaps: true
+					spanGaps: true,
+					hidden: true
 				       })
 		}
 		
