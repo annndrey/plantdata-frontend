@@ -196,7 +196,7 @@ export default {
 		    .then(request => this.setData('camera', request))
 		    .catch(request => console.log(request))
 	    } else if (force == 'F') {
-		console.log('Fetch camera data', cam.id, ind, force)
+		console.log('Fetch camera data', cam.id, ind, this.camindex, force)
 		this.$axios.get(this.$backendhost+'cameras/'+cam.id)
 		    .then(request => this.setData('camera', request))
 		    .catch(request => console.log(request))
@@ -230,14 +230,13 @@ export default {
 	    }
         },
 	changePicture() {
-	    let urlpref = "https://plantdata.fermata.tech:5498/api/v1/p/"
 	    this.imagesrc = []
-	    //console.log(this.pictures)
-	    this.imagesrc = this.pictures[this.pictindex]
+	    this.imagesrc = _.orderBy(this.pictures[this.pictindex], 'camlabel')
+	    console.log(this.imagesrc)
 	    //if (this.camindex) {
 	    if (this.camindex !== null) {
-		console.log('Fetch from changePicture', this.camindex)
 		let cam = this.imagesrc[this.camindex]
+		console.log('Fetch from changePicture', this.camindex, cam)
 		this.fetchCameraData(cam, this.camindex, 'F')
 	    }
 	    //}
