@@ -38,7 +38,7 @@ export default {
     },
   components: {
       Navbar,
-      Foot,
+      Foot
   }
 }
 </script>

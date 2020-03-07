@@ -15,7 +15,6 @@ import VCalendar from 'v-calendar';
 import Vue2Filters from 'vue2-filters'
 import _ from 'lodash'
 
-
 var VueCookie = require('vue-cookie');
 
 Vue.use(window.VueCharts)

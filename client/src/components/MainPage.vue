@@ -245,8 +245,7 @@ export default {
 	changePicture() {
 	    let urlpref = this.$backendhost + "p/"
 	    this.imagesrc = []
-	    //console.log(this.pictures)
-	    this.imagesrc = this.pictures[this.pictindex]
+	    this.imagesrc = _.orderBy(this.pictures[this.pictindex], 'camlabel')
 	    //if (this.camindex) {
 	    if (this.camindex !== null) {
 		console.log('Fetch from changePicture', this.camindex)
@@ -377,7 +376,7 @@ export default {
 		this.sensordata.map(obj => {
 		    obj.probes.map( probe => {
 			probe.values.map ( val => {
-			    let datalabel = probe.uuid + ' ' + val.label
+			    let datalabel =  val.label + ' ' + probe.uuid
 				if (this.probedata[datalabel]) {
 				    this.probedata[datalabel].values.push(val.value)
 				} else {
