@@ -181,6 +181,13 @@ export default {
                     }]
                 }
             },
+	    colors: {
+		"T": "rgba(239, 117, 172",
+		"C": "rgba(164, 168, 50",
+		"P": "rgba(181, 34, 226",
+		"H": "rgba(75, 192, 192",
+		"L": "rgba(207, 218, 245"
+	    }
  	}
     },
     created () {
@@ -401,25 +408,24 @@ export default {
 		}
 				   )
 		
-		//console.log(Object.keys(this.probedata))
-		console.log(this.labels)
 		for (let key in this.probedata) {
-		    //console.log(this.probedata[key].values)
+		    let labelprefix = key.charAt(0)
+		    console.log(key, labelprefix)
 		    this.datasets.push({label: key,
 					fill: false,
 					lineTension: 0.1,
-					backgroundColor: "rgba(207, 218, 245, 0.3)",
-					borderColor: "rgba(207, 218, 245, 0.3)",
+					backgroundColor: this.colors[labelprefix]+", 0.3)",
+					borderColor: this.colors[labelprefix]+", 0.3)",
 					borderCapStyle: 'butt',
 					borderDash: [],
 					borderDashOffset: 0.0,
 					borderJoinStyle: 'miter',
-					pointBorderColor: "rgba(207, 218, 245, 0.7)",
-					pointBackgroundColor: "rgba(207, 218, 245, 0.7)",
+					pointBorderColor: this.colors[labelprefix]+", 0.7)",
+					pointBackgroundColor: this.colors[labelprefix]+", 0.7)",
 					pointBorderWidth: 1,
 					pointHoverRadius: 5,
-					pointHoverBackgroundColor: "rgba(207, 218, 245, 0.6)",
-					pointHoverBorderColor: "rgba(207, 218, 245, 0.6)",
+					pointHoverBackgroundColor: this.colors[labelprefix]+", 0.6)",
+					pointHoverBorderColor: this.colors[labelprefix]+", 0.6)",
 					pointHoverBorderWidth: 2,
 					pointRadius: 1,
 					pointHitRadius: 10,
