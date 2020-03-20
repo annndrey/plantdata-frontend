@@ -186,7 +186,8 @@ export default {
 		"C": "rgba(164, 168, 50",
 		"P": "rgba(181, 34, 226",
 		"H": "rgba(75, 192, 192",
-		"L": "rgba(207, 218, 245"
+		"L": "rgba(207, 218, 245",
+		"W": "rgba(117, 118, 145"
 	    }
  	}
     },
@@ -340,15 +341,17 @@ export default {
 	showProbeData(puuid) {
 	    this.currentpuuid = puuid
 	    if ( this.currentsuuid ) {
-		console.log(this.currentpuuid)
+		console.log("Get probe data", this.currentsuuid, this.currentpuuid)
 		let params = {'params':
 			      {'suuid': this.currentsuuid,
-			       'puuid': puuid
+			       'puuid': this.currentpuuid
 			      }
 			     }
 		if (this.daterange) {
-		    params['params']['ts_from'] =  moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm")
-		    params['params']['ts_to'] = moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm")
+		    if (!moment(this.daterange.start).isSame(this.daterange.end) ) {
+			params['params']['ts_from'] =  moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm")
+			params['params']['ts_to'] = moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm")
+		    }
 		}
 		this.$axios.get(this.$backendhost+'data', params)
 		    .then(request => this.setData('data', request))
