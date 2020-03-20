@@ -340,20 +340,16 @@ export default {
 	showProbeData(puuid) {
 	    this.currentpuuid = puuid
 	    if ( this.currentsuuid ) {
-		console.log("Get probe data", this.currentsuuid, this.currentpuuid)
+		console.log(this.currentpuuid)
 		let params = {'params':
 			      {'suuid': this.currentsuuid,
-			       'puuid': this.currentpuuid
+			       'puuid': puuid
 			      }
 			     }
-		
 		if (this.daterange) {
-		    if (!moment(this.daterange.start).isSame(this.daterange.end) ) {
 		    params['params']['ts_from'] =  moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm")
 		    params['params']['ts_to'] = moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm")
-		    } }			
 		}
-		console.log(params)
 		this.$axios.get(this.$backendhost+'data', params)
 		    .then(request => this.setData('data', request))
 		    .catch(request => console.log(request))
@@ -405,17 +401,16 @@ export default {
 		    if (obj.probes.length > 0) {
 			this.labels.push(obj.ts)
 		    }
-		    //console.log(obj.ts)
+		    console.log(obj.ts)
 		    if (obj.cameras.length > 0) {
 			this.pictures.push(obj.cameras)
 		    }
 		}
 				   )
 		
-		//console.log(this.probedata)
-		
 		for (let key in this.probedata) {
 		    let labelprefix = key.charAt(0)
+		    console.log(key, labelprefix)
 		    this.datasets.push({label: key,
 					fill: false,
 					lineTension: 0.1,
