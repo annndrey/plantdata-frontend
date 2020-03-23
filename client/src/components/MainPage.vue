@@ -67,7 +67,7 @@
 		<div class="row" v-if="camera">
 		  <div class="col-md-6 mt-3" v-for="pos in _.orderBy(camera.positions, 'poslabel')">
 		    <p v-for="pict in pos.pictures" >
-		      <a type="button" class="btn btn-secondary btn-sm btn-block  mt-2" :href="pict.fpath" target="_blank">Fullsize</a>
+		      <a type="button" class="btn btn-secondary btn-sm btn-block  mt-2" :href="pict.original" target="_blank">Fullsize</a>
 		      {{pos.poslabel}} {{pict.ts | moment_filter}} <img :src="pict.preview" width="100%">
 		      {{pict.results}}
 		    </p>
@@ -254,21 +254,14 @@ export default {
 	    let urlpref = this.$backendhost + "p/"
 	    this.imagesrc = []
 	    this.imagesrc = _.orderBy(this.pictures[this.pictindex], 'camlabel')
+	    console.log(this.pictindex)
+	    console.log(this.imagesrc)
 	    //if (this.camindex) {
 	    if (this.camindex !== null) {
 		console.log('Fetch from changePicture', this.camindex)
 		let cam = this.imagesrc[this.camindex]
 		this.fetchCameraData(cam, this.camindex, 'F')
 	    }
-	    //}
-	    //.map( p => {
-	    //let correctdate = moment(p[0]).utcOffset("+00:00").format("DD-MM-YY HH:mm")
-	    //this.imagesrc.push({"pictdate": correctdate, "url": urlpref+p[1], "orig": urlpref+p[3], "label": decodeURI(p[2])})
-	    //})
-	    //this.imagesrc.sort((a,b) => (a.label > b.label) ? 1 : -1) 
-	    // cameras
-	    //this.camerasrc = []
-	    //this.camerasrc = this.cameras[this.pictindex]
 	    
 	    
 	},
@@ -314,7 +307,7 @@ export default {
 				     //'fill_date': 1
 				    }
 			 }
-	    console.log(params)
+	    //console.log(params)
 	    this.currentdate = this.daterange
 	    this.$axios.get(this.$backendhost+'data', params)
 		.then(request => this.setData('data', request))
@@ -323,7 +316,7 @@ export default {
 	},
 	showData(suuid) {
 	    this.currentsuuid = suuid
-	    console.log(this.currentsuuid)
+	    //console.log(this.currentsuuid)
 	    this.getSensorProbes()
 	    let params = {'params':
 			  {'suuid': suuid,
@@ -341,7 +334,7 @@ export default {
 	showProbeData(puuid) {
 	    this.currentpuuid = puuid
 	    if ( this.currentsuuid ) {
-		console.log("Get probe data", this.currentsuuid, this.currentpuuid)
+		//console.log("Get probe data", this.currentsuuid, this.currentpuuid)
 		let params = {'params':
 			      {'suuid': this.currentsuuid,
 			       'puuid': this.currentpuuid
@@ -387,6 +380,7 @@ export default {
 		    obj.probes.map( probe => {
 			probe.values.map ( val => {
 			    let datalabel =  val.label + ' ' + probe.uuid
+			    //console.log(datalabel, this.probedata[datalabel])
 				if (this.probedata[datalabel]) {
 				    this.probedata[datalabel].values.push(val.value)
 				} else {
@@ -404,7 +398,7 @@ export default {
 		    if (obj.probes.length > 0) {
 			this.labels.push(obj.ts)
 		    }
-		    console.log(obj.ts)
+		    //console.log(obj.ts)
 		    if (obj.cameras.length > 0) {
 			this.pictures.push(obj.cameras)
 		    }
@@ -413,7 +407,7 @@ export default {
 		
 		for (let key in this.probedata) {
 		    let labelprefix = key.charAt(0)
-		    console.log(key, labelprefix)
+		    //console.log(key, labelprefix)
 		    this.datasets.push({label: key,
 					fill: false,
 					lineTension: 0.1,
