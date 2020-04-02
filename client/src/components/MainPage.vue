@@ -69,7 +69,7 @@
 		    <p v-for="pict in pos.pictures" >
 		      <a type="button" class="btn btn-secondary btn-sm btn-block  mt-2" :href="pict.original" target="_blank">Fullsize</a>
 		      {{pos.poslabel}} {{pict.ts | moment_filter}} <img :src="pict.preview" width="100%">
-		      {{pict.results}}
+		      <span v-html=colorize_results(pict.results)></span>
 		    </p>
 		  </div>
 		</div>
@@ -209,6 +209,20 @@ export default {
 	}
     },
     methods: {
+	colorize_results: function(resdata) {
+	    let newdata = resdata.replace('Results: ','')
+	    newdata = newdata.split(",")
+	    newdata = newdata.map( obj => {
+		if (obj.includes("unhealthy")) {
+		    return '<span style="background-color: #FFFF00">'+obj+"</span>"
+		} else {
+		    return obj
+		}
+	    }
+				 )
+	    newdata = "Results: " + newdata.join(", ")
+	    return newdata
+	},
 	fetchCameraData(cam, ind, force) {
 	    if ( ind != this.camindex ) {
 		this.camindex = ind
