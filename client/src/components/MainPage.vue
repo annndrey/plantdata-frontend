@@ -14,8 +14,8 @@
 	</div>
 	<div class="row">
 	  <div class="col-md-12">
-	    <button v-for="probe in probes" type="button" class="btn btn-outline-secondary btn-sm ml-2 mt-2" @click="showProbeData(probe.uuid)">
-	      <small>probe {{probe.uuid}}</small>
+	    <button v-for="(probe, index) in probes" type="button" class="btn btn-outline-secondary btn-sm ml-2 mt-2" @click="showProbeData(probe['probe'].uuid)">
+	      <small>probe {{probe['index']}}</small>
 	    </button>
 	  </div>
 	</div>
@@ -42,9 +42,10 @@
     </div>
     <div class="row" v-if="sensordata">
       <div class="col-md-12">
+	Warnings: 
 	<form>
 	  <div class="form-group">
-	    <label for="formControlRange">Captured pictures ({{imgcount}})</label>
+	    <label for="formControlRange">Captured pictures ({{imgcount}}) </label>
 	    <input type="range" v-model="pictindex" @change="changePicture" min="0" :max="imgcount-1"  class="form-control-range" id="formControlRange">
 	  </div>
 	</form>
@@ -58,7 +59,7 @@
 	    <div class="card-header" :id="'camheader' + index" :key="'cam-' + index">
 	      <h2 class="mb-0">
 		<button class="btn btn-block" type="button" data-toggle="collapse" :data-target="'#collapse'+index" aria-expanded="true" :aria-controls="'collapse'+index" @click="fetchCameraData(cam, index, 'N')">
-		  Camera {{cam.camlabel}}
+		  Camera {{cam.camlabel}} {{cam.warnings}}
 		</button>
 	      </h2>
 	    </div>
@@ -158,7 +159,7 @@ export default {
 	    pictindex: 0,
 	    pictures: [],
 	    imagesrc: [],
-	    probes: [],
+	    probes: {},
 	    camindex: null,
 	    camera: null,
 	    imglabOel: null,
@@ -220,7 +221,13 @@ export default {
 		}
 	    }
 				 )
-	    newdata = "Results: " + newdata.join(", ")
+	    if (newdata.length > 1) {
+		newdata = "Results: " + newdata.join(", ")
+	    } else {
+		newdata = ""
+	    }
+	    
+
 	    return newdata
 	},
 	fetchCameraData(cam, ind, force) {
@@ -293,7 +300,6 @@ export default {
 	    
 	},
 	downloadData() {
-	    
 	    let params = {'params': {'suuid': this.currentsuuid,
 				     'ts_from': moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm"),
 				     'ts_to': moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm"),
@@ -315,6 +321,7 @@ export default {
 		})
 	},
 	showDataByDate(curdate) {
+	    console.log("")
 	    let params = {'params': {'suuid': this.currentsuuid,
 				     'ts_from': moment(curdate.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm"),
 				     'ts_to': moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm"),
@@ -331,35 +338,45 @@ export default {
 	showData(suuid) {
 	    this.currentsuuid = suuid
 	    //console.log(this.currentsuuid)
-	    this.getSensorProbes()
-	    let params = {'params':
-			  {'suuid': suuid,
-			  }
-			 }
-	    if (this.currentdate) {
-		params['params']['ts_from'] =  moment(this.currentdate.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm")
-		params['params']['ts_to'] = moment(this.currentdate.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm")
-	    }
+	    //this.getSensorProbes()
+	    let params = {'params': {'suuid': this.currentsuuid}}
+	    this.$axios.get(this.$backendhost+'probes', params)
+		.then(request => this.setData('probes', request))
+		.then(request => {
+		    //.catch(request => console.log(request))
 	    
-	    this.$axios.get(this.$backendhost+'data', params)
-		.then(request => this.setData('data', request))
+		    //let params = {'params':  {'suuid': suuid }}
+		    if (this.currentdate) {
+			params['params']['ts_from'] =  moment(this.currentdate.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm")
+			params['params']['ts_to'] = moment(this.currentdate.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm")
+		    }
+	    
+		    this.$axios.get(this.$backendhost+'data', params)
+			.then(request => this.setData('data', request))
+			.catch(request => console.log(request))
+		})
 		.catch(request => console.log(request))
 	},
 	showProbeData(puuid) {
 	    this.currentpuuid = puuid
 	    if ( this.currentsuuid ) {
-		//console.log("Get probe data", this.currentsuuid, this.currentpuuid)
+		console.log("Get probe data", this.currentsuuid, this.currentpuuid)
+		
 		let params = {'params':
 			      {'suuid': this.currentsuuid,
 			       'puuid': this.currentpuuid
 			      }
 			     }
-		if (this.daterange) {
+		if (this.currentdate) {
+		    params['params']['ts_from'] =  moment(this.currentdate.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm")
+		    params['params']['ts_to'] = moment(this.currentdate.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm")
+		} else {
 		    if (!moment(this.daterange.start).isSame(this.daterange.end) ) {
 			params['params']['ts_from'] =  moment(this.daterange.start).utcOffset("+03:00").format("DD-MM-YYYY HH:mm")
 			params['params']['ts_to'] = moment(this.daterange.end).utcOffset("+03:00").add(23, 'hours').add(59, 'minutes').add(59, 'seconds').format("DD-MM-YYYY HH:mm")
 		    }
 		}
+		
 		this.$axios.get(this.$backendhost+'data', params)
 		    .then(request => this.setData('data', request))
 		    .catch(request => console.log(request))
@@ -372,8 +389,14 @@ export default {
 		this.imagesrc = request.data
 	    } else if (what == "camera") {
 		this.camera = request.data
+		console.log(this.camera)
 	    } else if (what == "probes") {
-		this.probes = request.data
+		request.data.map( (probe, index) => {
+		    let prindex = index + 1
+		    this.probes[probe.uuid] = {"index": prindex, "probe": probe}
+		})
+		console.log(this.probes)
+		
 	    } else if (what == "data") {
 		this.labels.splice(0, this.labels.length)
 		this.datasets.splice(0, this.datasets.length)
@@ -389,12 +412,12 @@ export default {
 		this.imgcount = 0
 		this.pictindex = 0
 		this.probedata = {}
-		
+		//console.log(this.probes)
 		this.sensordata.map(obj => {
-		    obj.probes.map( probe => {
+		    obj.probes.map( (probe, index) => {
 			probe.values.map ( val => {
-			    let datalabel =  val.label + ' ' + probe.uuid
-			    //console.log(datalabel, this.probedata[datalabel])
+			    //console.log(probe)
+			    let datalabel =  val.label + ' probe ' + this.probes[probe.uuid]['index']			    //console.log(datalabel, this.probedata[datalabel])
 				if (this.probedata[datalabel]) {
 				    this.probedata[datalabel].values.push(val.value)
 				} else {
