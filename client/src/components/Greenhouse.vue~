@@ -1,0 +1,34 @@
+<template>
+  <div class="greenhouse">
+    222
+  </div>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+export default {
+    name: 'Greenhouse',
+    props: ['greenhouse_id'],
+    data () {
+	return {
+	    email: '',
+	    password: '',
+	    error: ''
+	}
+    },
+    computed: {
+	...mapGetters({ currentUser: 'currentUser'})
+    },    
+    created () {
+	console.log(111)
+    },
+    updated () {
+    },
+    methods: {
+    }
+}
+
+</script>
+
+<style>
+</style>

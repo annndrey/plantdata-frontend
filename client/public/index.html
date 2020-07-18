@@ -9,17 +9,57 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="<%= BASE_URL %>popper.min.js"></script>
     <script src="<%= BASE_URL %>bootstrap.min.js"></script>
+    <script>
+      $('#noclose').on('hide.bs.dropdown', function (e) {
+      if (e.clickEvent) {
+      e.preventDefault();
+      }
+      });
+    </script>
     <style type="text/css">
-      body { background: #b4b5b4 !important; padding-top: 30px}
-      .btn, .btn:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {background-color: #fbb040; border-color: #fbb040; color: rgba(0, 0, 0, 0.5)}
+      body { background: #1f6c39 !important; padding-top: 30px}
+      .btn, .btn:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
+      background-color: #367a4c;
+      border-color: #71c364;
+      color: #71c364;
+      border-radius: 13px;
+      min-width: 45px;
+      }
+      .btn:hover {background-color: #367a4c; border-color: #71c364; color: #71c364}
+      .text-primary {color: #ffffff}
+      .navbar-light .navbar-nav .nav-link {
+      color: white;
+      }
+      .navbar-light .navbar-nav .nav-link.active {
+      color: #71c364;
+      }
+      .navbar-light .navbar-nav .nav-link:hover{
+      color: #71c364;
+      }
+      .navbar-light .navbar-text {
+      color: white;
+      }
+      .login-wrapper { background: #1f6c39 !important }
+      h4 {color: white}
+      .navbar {
+      background-color: #1f6c39 !important;
+      color: white !important;
+      }
+      .border-bottom {
+      border-bottom: 1px solid green !important;
+      }
+      .card {
+      background-color: #367a4c;
+      color: white;
+      }
     </style>
-    <title>Sensors Data - dev</title>
+    <title>Fermata UI dev v2</title>
   </head>
-  <body>
+  <body >
     <noscript>
       <strong>We're sorry but our app doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
-    <div id="app"></div>
+    <div id="app" class="text-white"></div>
     <!-- built files will be auto injected -->
   </body>
 </html>

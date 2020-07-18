@@ -1,0 +1,54 @@
+<template>
+  <div class="detailspage">
+<div class="container">
+  
+  <div class="row">
+    <div class="col-md-12">
+      <greenhouse-nav ></greenhouse-nav>
+    </div>
+  </div>
+  
+  <div class="row w-110">
+    <div class="col-md-12">
+      111 {{id}} {{ $route.params.id }}
+      
+      123
+    </div>
+  </div>
+  
+</div>
+</div>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+import GreenhouseNav from '@/components/GreenhouseNav'
+export default {
+    name: 'Details',
+    props: ['id'],
+        components: {
+	GreenhouseNav
+    },
+    data () {
+	return {
+	    email: '',
+	    password: '',
+	    error: ''
+	}
+    },
+    computed: {
+	...mapGetters({ currentUser: 'currentUser'})
+    },    
+    created () {
+	console.log(111)
+    },
+    updated () {
+    },
+    methods: {
+    }
+}
+
+</script>
+
+<style>
+</style>

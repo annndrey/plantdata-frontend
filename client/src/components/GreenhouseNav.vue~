@@ -1,0 +1,99 @@
+<template>
+  <nav class="navbar navbar-expand-sm navbar-light">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+	<a class="nav-link" :class="{active: allIsActive}" @click="fetchSensorsStats()">
+	  <div class="spinner-grow spinner-grow-sm align-middle" role="status" v-if="allLoading">
+	    <span class="sr-only">Loading...</span>
+	  </div>
+	  All
+	</a>
+      </li>
+      <li class="nav-item" v-for="sensor, index in sensors">
+	<a class="nav-link" :key="index" :class="{ active: index === activeItem}" @click="fetchSensorStats(sensor.uuid, index)">
+	  <div class="spinner-grow spinner-grow-sm align-middle" role="status" v-if="index=== activeIndex">
+	    <span class="sr-only">Loading...</span>
+	  </div>
+	  Greenhouse #{{index+1}}
+	</a>
+      </li>
+    </ul>
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item dropdown">
+	<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	  Pick a date
+	</a>
+	<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+	  <a class="dropdown-item" href="#">today</a>
+	  <a class="dropdown-item" href="#">select interval</a>
+	</div>
+      </li>
+    </ul>
+  </nav>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+export default {
+    name: 'GreenhouseNav',
+    data () {
+	return {
+	    allLoading: false,
+	    sensorLoading: false,
+	    allIsActive: false,
+	    activeItem: null,
+	    daterange: {'start': new Date(), 'end': new Date()},
+	    currentdate: null,
+	}
+    },
+    computed: {
+	...mapGetters({ currentUser: 'currentUser'})
+    },    
+    created () {
+	this.fetchSensorsStats()
+    },
+    updated () {
+    },
+    methods: {
+	fetchSensorsStats() {
+	    this.allIsActive = !this.allIsActive
+	    this.activeItem = 'all'
+	    this.allLoading = true
+	    this.$emit('activeItemChanged', this.activeItem)
+	    if (this.$route.params.id != this.activeItem) {
+		this.$router.replace({ name: this.$route.name, params: {id:this.activeItem} })
+		    .catch(()=>{})
+	    }
+	    this.$axios.get(this.$backendhost+'sensors')
+		.then(request => { this.setData('sensors', request)
+				   this.allLoading = false
+				 }
+		     )
+		.catch(request => console.log(request))
+	    
+	},
+	fetchSensorStats(uuid, index) {
+	    this.allIsActive = false
+	    this.activeItem = index
+	    this.sensorLoading = true
+	    this.$emit('activeItemChanged', this.activeItem)
+	    if (this.$route.params.id != this.activeItem) {
+		this.$router.replace({ name: this.$route.name, params: {id:this.activeItem} })
+		    .catch(()=>{})
+	    }
+	    console.log("Fetching sensor stats " + uuid)
+	    this.sensorLoading = false
+	},
+	setData(what, request) {
+	    if (what == "sensors") {
+		this.sensors = request.data
+	    } 	    
+	}
+	
+    }
+}
+
+</script>
+
+<style>
+</style>

@@ -2,7 +2,6 @@
 <div class="login-wrapper">
 
   <form class="form-signin" @submit.prevent="login">
-
     <h2 class="form-signin-heading">Please login</h2>
     <h4><flash-message transition-name="fade"></flash-message></h4>
       <label for="inputEmail" class="sr-only">Email</label>
@@ -54,8 +53,10 @@ export default {
 	    var user = { 'token' : response.data.token,
 			 'name': response.data.name,
 			 'login': response.data.login,
-			 'user_id': response.data.user_id
-			 }
+			 'user_id': response.data.user_id,
+			 'company': response.data.company
+		       }
+	    console.log(response.data)
 	    localStorage.user = JSON.stringify(user)
 	    localStorage.token = user.token
 	    this.$store.dispatch('login')
@@ -108,7 +109,6 @@ body {
 }
 
 .login-wrapper {
-    background: #b4b5b4;
     width: 70%;
     margin: 12% auto;
 }
@@ -121,6 +121,7 @@ body {
 .form-signin .form-signin-heading,
 .form-signin .checkbox {
     margin-bottom: 10px;
+    color: white;
 }
 .form-signin .checkbox {
     font-weight: normal;
