@@ -18,25 +18,34 @@
 	  <div class="col-md-12">
 	    <div class="card-deck">
 	      
-	      <div class="card">
+	      <div class="card rounded">
 		<div class="card-body">
-		  <h5 class="card-title">Overall plants health</h5>
-		  <p class="card-text">Chart here</p>
+		  <p class="card-text">
+		    <PieChart v-if="overallHealth" radius=50 strokeWidth=7 :percent="overallHealth"/>
+		  </p>
+		  <h6 class="card-title">Overall Plants Health</h6>
 		</div>
 	      </div>
 	      
-	      <div class="card">
+	      <div class="card rounded">
 		<div class="card-body">
-		  <h5 class="card-title">Diseased zones discovered</h5>
-		  <p class="card-text">Chart here</p>
+		  <p class="card-text">
+		    <BarChart v-if="diseasedZones" title="Bar Chart" xKey="name" yKey="amount" :data="diseasedZones"/>
+		  </p>
+		  <h6 class="card-title">Diseased zones discovered</h6>
+
 		  <router-link class="btn btn-primary" :to="'/images/' + activeItem">Details [AI Images]</router-link>
+		  
 		</div>
 	      </div>
 	      
-	      <div class="card">
+	      <div class="card rounded">
 		<div class="card-body">
-		  <h5 class="card-title">Unusual spikes of Sensors Data</h5>
-		  <p class="card-text">Chart here</p>
+		  <p class="card-text">
+		    <CircleChart v-if="spikes" :amount="spikes"/>
+		  </p>
+		  <h6 class="card-title">Unusual spikes of Sensors Data</h6>
+
 		  <router-link class="btn btn-primary" :to="'/sensors/' + activeItem">Details [Sensors]</router-link>
 		</div>
 	      </div>
@@ -54,16 +63,25 @@
 import moment from 'moment'
 import { mapGetters } from 'vuex'
 import GreenhouseNav from '@/components/GreenhouseNav'
-
+import PieChart from "@/components/PieChart.vue"
+import BarChart from "@/components/BarChart.vue"
+import CircleChart from "@/components/CircleChart.vue"
 export default {
     name: 'Stats',
     components: {
-	GreenhouseNav
+	GreenhouseNav,
+	BarChart,
+	PieChart,
+	CircleChart
     },
     data: function() {
 	return {
 	    sensors: null,
 	    activeItem: null,
+	    uuid: null,
+	    overallHealth: null,
+	    diseasedZones: null,
+	    spikes: null
  	}
     },
     created () {
@@ -80,7 +98,26 @@ export default {
     methods: {
 	setActiveItem(value) {
 	    console.log(value)
-	    this.activeItem = value
+	    this.activeItem = value.activeItem
+	    this.uuid = value.uuid
+	    let params = {}
+	    if ( this.uuid ) {
+		params.suuid = this.uuid
+	    }
+	    
+	    params.ts_from = moment(value.dateRange.start).unix()
+	    params.ts_to = moment(value.dateRange.end).unix()
+	    console.log(params)
+	    this.$axios.get(this.$backendhost+'stats', { params: params })
+		.then(request => {
+		    this.overallHealth = request.data.health
+		    this.diseasedZones = request.data.diseased_zones
+		    this.spikes = request.data.spikes
+		    console.log(request.data)
+		}
+		     )
+		.catch(request => console.log(request))
+	    
 	}
     }
 
@@ -135,6 +172,10 @@ export default {
       -moz-animation:spin 2s linear infinite;
       animation:spin 2s linear infinite;
   }
+  .rounded {
+      border-radius: 0.5em !important;
+  }
+  
   @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
   @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
   @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }

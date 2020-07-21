@@ -63,6 +63,15 @@ export default {
     },
     updated () {
     },
+    watch: {
+	'daterange': function(newVal){
+	    let outData = {}
+	    outData.activeItem = this.activeItem
+	    outData.uuid = this.uuid
+	    outData.dateRange = this.daterange
+	    this.$emit('activeItemChanged', outData)
+	},
+    },
     methods: {
 	showDate(date) {
 	    return this.$moment(date).format('DD/MM/YYYY')
@@ -80,7 +89,11 @@ export default {
 	    this.allIsActive = !this.allIsActive
 	    this.activeItem = 'all'
 	    this.allLoading = true
-	    this.$emit('activeItemChanged', this.activeItem)
+	    let outData = {}
+	    outData.activeItem = this.activeItem
+	    outData.uuid = null
+	    outData.dateRange = this.daterange
+	    this.$emit('activeItemChanged', outData)
 	    if (this.$route.params.id != this.activeItem) {
 		this.$router.replace({ name: this.$route.name, params: {id:this.activeItem} })
 		    .catch(()=>{})
@@ -97,12 +110,15 @@ export default {
 	    this.allIsActive = false
 	    this.activeItem = index
 	    this.sensorLoading = true
-	    this.$emit('activeItemChanged', this.activeItem)
+	    let outData = {}
+	    outData.activeItem = this.activeItem
+	    outData.uuid = uuid
+	    outData.dateRange = this.daterange
+	    this.$emit('activeItemChanged', outData)
 	    if (this.$route.params.id != this.activeItem) {
 		this.$router.replace({ name: this.$route.name, params: {id:this.activeItem} })
 		    .catch(()=>{})
 	    }
-	    console.log("Fetching sensor stats " + uuid)
 	    this.sensorLoading = false
 	},
 	setData(what, request) {
