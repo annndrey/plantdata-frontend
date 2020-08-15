@@ -6,9 +6,12 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <link rel="stylesheet" href="<%= BASE_URL %>bootstrap.min.css">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap" rel="stylesheet"> 
+    <script src="<%= BASE_URL %>jquery-3.3.1.slim.min.js"></script>
     <script src="<%= BASE_URL %>popper.min.js"></script>
     <script src="<%= BASE_URL %>bootstrap.min.js"></script>
+
+    
     <script>
       $('#noclose').on('hide.bs.dropdown', function (e) {
       if (e.clickEvent) {
@@ -16,14 +19,24 @@
       }
       });
     </script>
+    <script>
+      $(function () {
+      $('[data-toggle="popover"]').popover()
+      })
+    </script>
     <style type="text/css">
-      body { background: #1f6c39 !important; padding-top: 30px}
+      body {
+      background: #1f6c39 !important;
+      padding-top: 30px;
+      font-family: 'Montserrat', sans-serif;
+      }
       .btn, .btn:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open>.dropdown-toggle.btn-primary {
       background-color: #367a4c;
       border-color: #71c364;
       color: #71c364;
       border-radius: 13px;
       min-width: 45px;
+      font-size: 0.6em;
       }
       .btn:hover {background-color: #367a4c; border-color: #71c364; color: #71c364}
       .text-primary {color: #ffffff}

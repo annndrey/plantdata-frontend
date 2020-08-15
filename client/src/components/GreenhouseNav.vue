@@ -22,9 +22,12 @@
       <li class="nav-item">
 	<a class="btn btn-white" data-toggle="collapse" href="#collapseDate" role="button" aria-expanded="false" aria-controls="collapseDate">
 	  {{ dateFormat() }}
+	  <svg width="0.8em" height="0.8\em" viewBox="0 0 16 16" class="bi bi-chevron-down" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+	    <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+	  </svg>
 	</a>
 	<div class="collapse" id="collapseDate">
-	  <div class="card card-body">
+	  <div class="card card-body card-white">
 	    <v-date-picker
 	      mode="range"
 	      v-model="daterange"
@@ -56,7 +59,7 @@ export default {
 	}
     },
     computed: {
-	...mapGetters({ currentUser: 'currentUser'})
+	...mapGetters({ currentUser: 'currentUser', selectedDate: 'selectedDate'})
     },    
     created () {
 	this.fetchSensorsStats()
@@ -69,6 +72,7 @@ export default {
 	    outData.activeItem = this.activeItem
 	    outData.uuid = this.uuid
 	    outData.dateRange = this.daterange
+	    this.$store.dispatch("change_date", this.daterange)
 	    this.$emit('activeItemChanged', outData)
 	},
     },
@@ -86,6 +90,8 @@ export default {
 	    }
 	},
 	fetchSensorsStats() {
+	    //console.log("change date", this.daterange)
+	    this.$store.dispatch("change_date", this.daterange)
 	    this.allIsActive = !this.allIsActive
 	    this.activeItem = 'all'
 	    this.allLoading = true
@@ -133,10 +139,20 @@ export default {
 </script>
 
 <style>
-  .content {
+  .card-white {
+  background-color: transparent;
+  border-color: transparent;
+  font-size: 0.8em;
+  }
+ .btn-white {
+  color: black;
+  background-color: white;
+  border-color: white;
+  font-size: 0.6em;
+  }
+.content {
   position: relative;
   }
-  
   #collapseDate {
   position: absolute;
   z-index: 1;

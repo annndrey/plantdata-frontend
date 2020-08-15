@@ -7,9 +7,7 @@
 	<div class="row">
 	  <div class="col-md-12 text-left">
 	    <h4> {{currentUser.company}}</h4>
-	    
 	    <greenhouse-nav @activeItemChanged="setActiveItem"></greenhouse-nav>
-	    
 	  </div>
 	</div>
 
@@ -107,6 +105,7 @@ export default {
 	    
 	    params.ts_from = moment(value.dateRange.start).unix()
 	    params.ts_to = moment(value.dateRange.end).unix()
+	    
 	    console.log(params)
 	    this.$axios.get(this.$backendhost+'stats', { params: params })
 		.then(request => {
@@ -144,6 +143,9 @@ export default {
   }
   h3 {
   margin: 40px 0 0;
+  }
+  h6 {
+      font-size: 0.8em;
   }
   ul {
   list-style-type: none;

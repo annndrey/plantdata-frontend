@@ -35,10 +35,11 @@ export default {
     },
     methods: {
 	checkCurrentLogin () {
-	    this.$cookie.set('auth', localStorage.token, 1)
+	    //this.$cookie.set('auth', localStorage.token, 1)
+	    this.$cookie.set('auth', localStorage.token, {domain: '.plantdata.fermata.tech'})
 	    if (this.currentUser) {
 		this.$axios.defaults.headers.common.Authorization = 'Bearer ' + localStorage.token
-		this.$cookie.set('auth', localStorage.token)
+		this.$cookie.set('auth', localStorage.token, {domain: '.plantdata.fermata.tech'})
 		this.$router.replace(this.$route.query.redirect || '/')
 	    } 
 	},
@@ -60,15 +61,9 @@ export default {
 	    localStorage.user = JSON.stringify(user)
 	    localStorage.token = user.token
 	    this.$store.dispatch('login')
-	    // 
 	    this.$axios.defaults.headers.common.Authorization = 'Bearer ' + localStorage.token
-	    this.$cookie.set('auth', localStorage.token, 1)
-	    
-	    // if ( this.currentUser.isadmin ) {
-		//this.$router.replace( this.$route.query.redirect || '/admin')
-	    //} else if ( this.currentUser.superadmin ) {
-		//this.$router.replace( this.$route.query.redirect || '/')
-	    //}
+	    //this.$cookie.set('auth', localStorage.token, 1)
+	    this.$cookie.set('auth', localStorage.token, {domain: '.plantdata.fermata.tech'})
 	    this.$router.replace( this.$route.query.redirect || '/')
 	    
 	},

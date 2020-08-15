@@ -21,109 +21,151 @@
 	<div class="container">
 	  <div class="row">
 	    <div class="col-md-12">
-	      
-	      <nav class="navbar navbar-expand-sm navbar-details">
-		<ul class="navbar-nav mr-auto">
-		  <li class="nav-item">
-		    <button class="btn nav-link">
-		      <svg width="0.8em" height="0.8em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-			<rect width="4" height="5" x="1" y="10" rx="1"/>
-			<rect width="4" height="9" x="6" y="6" rx="1"/>
-			<rect width="4" height="14" x="11" y="1" rx="1"/>
-		      </svg>
-		    </button>
-		  </li>
-		  <li class="nav-item">
-		    <button class="btn nav-link">
-		      <svg width="0.8em" height="0.8em" viewBox="0 0 16 16" class="bi bi-layers-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-			<path fill-rule="evenodd" d="M7.765 1.559a.5.5 0 0 1 .47 0l7.5 4a.5.5 0 0 1 0 .882l-7.5 4a.5.5 0 0 1-.47 0l-7.5-4a.5.5 0 0 1 0-.882l7.5-4z"/>
-			<path fill-rule="evenodd" d="M2.125 8.567l-1.86.992a.5.5 0 0 0 0 .882l7.5 4a.5.5 0 0 0 .47 0l7.5-4a.5.5 0 0 0 0-.882l-1.86-.992-5.17 2.756a1.5 1.5 0 0 1-1.41 0l.418-.785-.419.785-5.169-2.756z"/>
-		      </svg>
-		    </button>
-		  </li>
-		  <li class="nav-item">
-		    <button class="btn nav-link">
-		      <svg width="0.8em" height="0.8em" viewBox="0 0 16 16" class="bi bi-flag-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-			<path fill-rule="evenodd" d="M3.5 1a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-1 0v-13a.5.5 0 0 1 .5-.5z"/>
-			<path fill-rule="evenodd" d="M3.762 2.558C4.735 1.909 5.348 1.5 6.5 1.5c.653 0 1.139.325 1.495.562l.032.022c.391.26.646.416.973.416.168 0 .356-.042.587-.126a8.89 8.89 0 0 0 .593-.25c.058-.027.117-.053.18-.08.57-.255 1.278-.544 2.14-.544a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-.5.5c-.638 0-1.18.21-1.734.457l-.159.07c-.22.1-.453.205-.678.287A2.719 2.719 0 0 1 9 9.5c-.653 0-1.139-.325-1.495-.562l-.032-.022c-.391-.26-.646-.416-.973-.416-.833 0-1.218.246-2.223.916A.5.5 0 0 1 3.5 9V3a.5.5 0 0 1 .223-.416l.04-.026z"/>
-		      </svg>
-		    </button>
-		  </li>
-		</ul>
-		<ul class="navbar-nav justify-content-center">
-		  <li class="nav-item">
-		    <button class="btn nav-link">
-		      <svg width="0.8em" height="0.8em" viewBox="0 0 16 16" class="bi bi-calendar" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-			<path fill-rule="evenodd" d="M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1zm1-3a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2z"/>
-			<path fill-rule="evenodd" d="M3.5 0a.5.5 0 0 1 .5.5V1a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 .5-.5zm9 0a.5.5 0 0 1 .5.5V1a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 .5-.5z"/>
-		      </svg>
-		    </button>
-		  </li>
-		</ul>
-		<ul class="navbar-nav ml-auto">
-		  <li class="nav-item">
-		    <button class="btn nav-link" width="20px">
-		      <svg width="0.8em" height="0.8em" viewBox="0 0 16 16" class="bi bi-download" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-			<path fill-rule="evenodd" d="M.5 8a.5.5 0 0 1 .5.5V12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5a.5.5 0 0 1 1 0V12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V8.5A.5.5 0 0 1 .5 8z"/>
-			<path fill-rule="evenodd" d="M5 7.5a.5.5 0 0 1 .707 0L8 9.793 10.293 7.5a.5.5 0 1 1 .707.707l-2.646 2.647a.5.5 0 0 1-.708 0L5 8.207A.5.5 0 0 1 5 7.5z"/>
-			<path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-1 0v-8A.5.5 0 0 1 8 1z"/>
-		      </svg>
-		    </button>
-		  </li>
-		</ul>
-		
-	      </nav>
-	    </div>
-	  </div>
-	</div>
-	
-	<div class="container">
-	  <div class="row">
-	    <div class="col-md-6 mx-auto">
-	      
-	      {{id}} {{ $route.params.id }}
+	      <widget-nav @activeItemChanged="changeWidget" parent="sensors"></widget-nav>
 	    </div>
 	  </div>
 	</div>
 
-	<div class="col-md-12">
-	  barplot/heatmap
-	</div>
-	<div class="col-md-12">
-	  table with warnings
-	</div>
-    
+	<div class="container container-rounded">
+
+	  <div class="row">
+	    <div class="col-md-12">
+
+	      <span  v-for="(val, ind) in probes" :key="val" @click="modifyData(ind, $event)"> Probe #{{val}}</span>
 	      
+	    </div>
+	  </div>
+
+	  <div class="row mt-5">
+	    <div class="col-md-12">
+	  
+	      <span v-show="activeItem == 'barchart'">
+		<LineChart title="Line Chart" xKey="name" yKey="amount" :data="plotData" :probedata="probes"/>
+	      </span>
+
+	    </div>
+	  </div>
+	  
+	  <div class="row">
+	    <div class="col-md-12">
+	  
+	      <span v-show="activeItem == '3d'">
+		3d view
+	      </span>
+	  
+	      <span v-show="activeItem == 'flag'">
+		table with warnings
+	      </span>
+
+	    </div>
+	  </div>
+	</div>
+	
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import moment from 'moment'
 import { mapGetters } from 'vuex'
 import GreenhouseNav from '@/components/GreenhouseNav'
+import WidgetNav from '@/components/WidgetNav'
+import LineChart from '@/components/LineChart'
+
 export default {
     name: 'Sensors',
     props: ['id'],
         components: {
-	GreenhouseNav
+	    GreenhouseNav,
+	    WidgetNav,
+	    LineChart
     },
     data () {
 	return {
-	    email: '',
-	    password: '',
+	    activeItem: null,
+	    uuid: null,
+	    plotData: null,
+	    fullData: null,
+	    probes: null,
+	    selectedProbes: null,
 	    error: ''
 	}
     },
     computed: {
-	...mapGetters({ currentUser: 'currentUser'})
+	...mapGetters({ currentUser: 'currentUser', selectedDate: 'selectedDate'})
     },    
     created () {
-	console.log(111)
+	console.log("sensors")
     },
     updated () {
     },
+    watch: {
+	selectedDate (newDate, oldDate) {
+	    this.fetchData()
+	}
+    },
     methods: {
+	modifyData(ind, event) {
+	    event.target.classList.toggle('greytext')
+	    if (this.selectedProbes.includes(ind)) {
+		var index = this.selectedProbes.indexOf(ind)
+		this.selectedProbes.splice(index, 1)
+	    } else {
+		this.selectedProbes.push(ind)
+	    }
+	    
+	    var tempData = {...this.fullData}
+	    tempData.data = {}
+	    Object.keys(this.fullData.data).map( k => {
+		var probe = k.split(" ")[1]
+		if (this.selectedProbes.includes(probe)) {
+		    tempData.data[k] = this.fullData.data[k]
+		}
+	    })
+	    
+	    this.plotData = tempData
+	},
+	preformatData(data){
+	    let outdata = {}
+	    let indices = {}
+	    var prindex = 1
+	    this.selectedProbes = []
+	    let probes = Object.keys(data.data).map( (k, ind)  => {
+		let [sens, probe] = k.split(" ")
+		
+		if (!Object.keys(indices).includes(probe)) {
+		    indices[probe] = prindex
+		    prindex++
+		    this.selectedProbes.push(probe)
+		}
+	    })
+	    this.probes = indices
+	},
+	changeWidget(value) {
+	    this.activeItem = value.activeItem
+	    this.uuid = value.uuid
+	},
+	fetchData() {
+	    let params = {}
+	    params.ts_from = moment(this.selectedDate.start).unix()
+	    params.ts_to = moment(this.selectedDate.end).unix()
+	    params.unixdate = 1
+	    params.compact = 1
+	    params.dataonly = 1
+	    if ( this.uuid ) {
+		params.suuid = this.uuid
+	    }
+	    this.$axios.get(this.$backendhost+'data', { params: params })
+		.then(request => {
+		    this.plotData = request.data.data
+		    this.fullData = {...this.plotData}
+		    this.preformatData(request.data.data)
+		}
+		     )
+		.catch(request => console.log(request))
+	    
+	}
     }
 }
 
@@ -132,7 +174,6 @@ export default {
 <style>
   .panelplot {
   background: #f6f7f9;
-  height: 100vh;
   }
   .navbar-details {
   background: #f6f7f9 !important;
@@ -140,5 +181,12 @@ export default {
   }
   h5 {
   color: white
+  }
+  .container-rounded {
+      background-color: white;
+      border-radius: 30px;
+  }
+  .greytext {
+      color: lightgray;
   }
 </style>
