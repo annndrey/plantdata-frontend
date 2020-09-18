@@ -10,7 +10,7 @@ import { scaleLinear, scalePoint, scaleBand, scaleTime } from "d3-scale";
 import { max, min } from "d3-array";
 import { select, selectAll } from "d3-selection";
 import { transition } from "d3-transition";
-import { axisBottom, axisLeft, line, easeLinear } from 'd3';
+import { axisBottom, axisLeft, line, easeLinear, animate } from 'd3';
 import moment from 'moment'
 
 export default {
@@ -49,7 +49,7 @@ export default {
 		var objlist = []
 		datakeys.push(k)
 		this.data.labels.map((obj, index) => {
-		    let label = moment(obj).locale('en').format('HH:mm')
+		    let label = moment(obj).locale('en').format('DD/MM/YY HH:mm')
 		    let val =  this.data.data[k][index]
 		    objlist.push({"date": label, "value": val})
 		})
@@ -72,11 +72,19 @@ export default {
 	    const highestAmount = max(datalists.map(d => max(d)))
 
 	    let yticks = Array.from({length:highestAmount},(v,k)=>k)
-
+	    
 	    var x = scalePoint()
 		.domain(xticks)  
 		.range([this.svgWidth*0.040, this.svgWidth*0.97])
-	    
+
+	    var miny = min(yticks)
+	    var maxy = max(yticks)
+	    if (miny == null && maxy == null) {
+		miny = 0
+		maxy = 100
+		yticks = Array.from(Array(100).keys())
+
+	    }
 	    var y = scaleLinear()
 		.domain([min(yticks), max(yticks)])
 		.range([this.svgHeight, 0])
@@ -96,7 +104,6 @@ export default {
 	    xlabels.selectAll(".tick line").attr("stroke", "lightgray").attr("stroke-dasharray", "1,4")
 	    xlabels.selectAll(".tick")
 		.each(function (d,i) {
-		    console.log(this, d, i)
 		    select(this)
 			.attr("color", function() {
 			    if (i % 2 == 0) {
@@ -117,7 +124,6 @@ export default {
 	    ylabels.selectAll(".tick line").attr("stroke", "lightgray").attr("stroke-dasharray", "1,4")
 	    ylabels.selectAll(".tick")
 		.each(function (d,i) {
-		    console.log(this, d, i)
 		    select(this)
 			.attr("color", function() {
 			    if (i % 2 == 0) {
@@ -151,23 +157,23 @@ export default {
 		.each(function(d,i) {
 		    var ln  = select(this)
 		    ln.attr("class", "line"+i)
-		    ln.attr('stroke', colors[i])
-		    ln.attr("id", "line"+colors[i])
-		    ln.style("opacity", 1)
+			.attr('stroke', colors[i])
+			.attr("id", "line"+colors[i])
+			.style("opacity", 1)
+		    
+		    let lnLength = ln.node().getTotalLength()
+		    
+		    ln.attr("stroke-dasharray", lnLength + " " + lnLength)
+			.attr("stroke-dashoffset", lnLength)
+			.transition()
+			.duration(2800)
+			.ease(easeLinear)
+			.attr("stroke-dashoffset", 0)
 		})
-	    var totalLength = lines.node().getTotalLength() + 1000
-	    lines
-		.attr("stroke-dasharray", totalLength + " " + totalLength)
-		.attr("stroke-dashoffset", totalLength)
-		.transition()
-		.duration(2800)
-		.ease(easeLinear)
-		.attr("stroke-dashoffset", 0)
 
 	    var textlegend = svg.append("g")
 	    	.append("text")
 	    	.attr("class", "textlegend")
-	    //		.attr("transform", "translate(" + this.svgWidth * 0.4 + ", 10)")
 		.attr("x", "50%")
 		.attr("y", "5%")
 		.attr("dominant-baseline", "middle")
@@ -190,88 +196,20 @@ export default {
 				var textid = "#text"+colors[i-1]
 				var selectedLine = select(lineid)
 				var selectedText = select(textid)
-				console.log('opacity', selectedLine.style("opacity"))
-
 				var lineOpacity = selectedLine.style("opacity") == 0 ? 1 : 0
 				var textColor = selectedText.attr("fill") == colors[i-1] ? "lightgrey" : colors[i-1] 
 				// Hide or show the elements
 				//select(textid).style("opacity", textOpacity)
-				select(lineid).style("opacity", lineOpacity)
+				
+				select(lineid)
+				    .transition()
+				    .duration(300)
+				    .style("opacity", lineOpacity)
 				selectedText.attr("fill", textColor)
 				// Update whether or not the elements are active
 				//selectedLine.active = active
-				
 			    })
-			}})
-	    
-	    
-	    
-	    //select("#line-chart")
-		//.attr("height", this.svgHeight + 100)
-
-	    //lineGroup.append("path")
-	//	.datum(values)
-	//	.attr("fill", "none")
-	////	.attr("stroke", "steelblue")
-	//	.attr("stroke-width", 1.5)
-	//	.attr("d", l(values))
-
-	  //  console.log('Scale', this.xScale('17:46'))
-	//    var rect = barGroup.selectAll("rect")
-	//	.data(this.data)
-	//	.enter()
-	//	.append("rect")
-	//	.attr("x", d => {
-	//	    return this.xScale(d[this.xKey])
-	//	})
-	//	.attr("data", d => d[this.xKey])
-	//	.attr("y", d => {
-	//	    return this.yScale(0)
-	//	})
-	//	.attr("width", d =>  {
-	//	    return this.xScale.bandwidth()
-	//	})
-	//	.attr("height", 0)
-	//	.attr("class", d => {
-	//	    if (this.data.slice(-1)[0].name === d.name) {
-	//		return "bar-positive green"
-	//	    } else {
-	//		return "bar-positive"
-	//	    }
-	//	})
-	//	.on("click", val => {
-	//	    //d3.select(this).attr("r", 12);
-	//	    selectAll("rect").classed("green", false)
-	//	    select("[data='" + val.name+ "']")
-	//		.attr("class", "bar-positive green")
-	//	    //select(this).classed("bar-positive green", true)
-	//	    //select(this).attr("class", "bar-positive green")
-	//	    //console.log("Rectangle clicked", this)
-	//	    this.$emit('barDateChanged', val)
-	//	})
-	  //  
-	//    selectAll(".bar-positive")
-	//	.data(this.data)
-	//	.transition()
-	//	.delay((d, i) => {
-	//	    return i * 100;
-	//	})
-	//	.duration(800)
-	//	.attr("y", d => {
-	//	    return this.yScale(d[this.yKey]);
-	//	})
-	//	.attr("height", d => {
-	//	    return this.svgHeight - this.yScale(d[this.yKey]);
-	//	})
-	  //  
-	//    xlabels.selectAll('text').filter( d => {
-	//	let n = d.split(" ")[1]
-	//	//console.log(n % 2 == 0)
-	//	return n % 2 == 0
-	  //  })
-	//	.attr('class', 'text-lght')
- 
-	    //this.$emit('barDateChanged', this.data.slice(-1)[0])
+		    }})
 	},
 	AddResizeListener() {
 	    // redraw the chart 300ms after the window has been resized
@@ -303,7 +241,7 @@ export default {
 		.domain(
 		    this.data.labels.map((obj) => {
 			//console.log('scale', moment(obj).locale('en').format('HH:mm'))
-			return moment(obj).locale('en').format('HH:mm')
+			return moment(obj).locale('en').format('DD/MM/YY HH:mm')
 		    })
 		)
 	},

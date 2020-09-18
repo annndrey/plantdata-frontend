@@ -126,13 +126,9 @@ export default {
 		    }
 		})
 		.on("click", val => {
-		    //d3.select(this).attr("r", 12);
 		    selectAll("rect").classed("green", false)
 		    select("[data='" + val.name+ "']")
 			.attr("class", "bar-positive green")
-		    //select(this).classed("bar-positive green", true)
-		    //select(this).attr("class", "bar-positive green")
-		    //console.log("Rectangle clicked", this)
 		    this.$emit('barDateChanged', val)
 		})
 	    
@@ -144,35 +140,33 @@ export default {
 		})
 		.duration(800)
 		.attr("y", d => {
-		    return this.yScale(d[this.yKey]);
+		    let yscale = this.yScale(d[this.yKey])
+		    console.log("Y", yscale)
+		    return this.yScale(d[this.yKey])
 		})
 		.attr("height", d => {
-		    return this.svgHeight - this.yScale(d[this.yKey]);
+		    let height = this.svgHeight - this.yScale(d[this.yKey])
+		    if (height == 0) {
+			height = 20
+		    }
+		    return height
+		})
+		.style("fill", d => {
+		    let height = this.svgHeight - this.yScale(d[this.yKey])
+		    if (height == 0) {
+			console.log("Fill", "transparent")
+			return "transparent"
+		    }
+
 		})
 	    
 	    xlabels.selectAll('text').filter( d => {
 		let n = d.split(" ")[1]
-		//console.log(n % 2 == 0)
 		return n % 2 == 0
 	    })
 		.attr('class', 'text-lght')
 	    
 	    this.$emit('barDateChanged', this.data.slice(-1)[0])
-	    
-	    //select(".barGroup").append("text")
-	//	.attr("y", this.svgHeight*0.6)//magic number here
-	//	.attr("x", this.svgWidth*0.7)
-	//	.attr('text-anchor', 'middle')
-	//	.attr("class", "barText")//easy to style with CSS
-	//	.text(this.data.slice(-1)[0].amount);
-	//    select(".barGroup").append("text")
-	//	.attr("y", this.svgHeight*0.85)//magic number here
-	//	.attr("x", this.svgWidth*0.7)
-	//	.attr('text-anchor', 'middle')
-	//	.attr("class", "barTextSmall")//easy to style with CSS
-	//	.text(last_day_text);
-	//    console.log(this.data.slice(-1)[0].amount)
-	    
 	},
 	AddResizeListener() {
 	    // redraw the chart 300ms after the window has been resized

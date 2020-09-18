@@ -26,7 +26,7 @@
 	  </div>
 	</div>
 
-	<div class="container container-rounded">
+	<div class="container container-rounded" id="parent-svg-container">
 
 	  <div class="row">
 	    <div class="col-md-12">
@@ -36,7 +36,7 @@
 	    </div>
 	  </div>
 
-	  <div class="row mt-5">
+	  <div class="row mt-1">
 	    <div class="col-md-12">
 	  
 	      <span v-show="activeItem == 'barchart'">
@@ -48,9 +48,8 @@
 	  
 	  <div class="row">
 	    <div class="col-md-12">
-	  
 	      <span v-show="activeItem == '3d'">
-		3d view
+		<DensityChart title="Density Chart" :data="plotData" :probedata="probes" :probescoords="probesCoords" :parmax="parMax" :svgWidth="svgwidth"/>
 	      </span>
 	  
 	      <span v-show="activeItem == 'flag'">
@@ -72,6 +71,7 @@ import { mapGetters } from 'vuex'
 import GreenhouseNav from '@/components/GreenhouseNav'
 import WidgetNav from '@/components/WidgetNav'
 import LineChart from '@/components/LineChart'
+import DensityChart from '@/components/DensityChart'
 
 export default {
     name: 'Sensors',
@@ -79,7 +79,8 @@ export default {
         components: {
 	    GreenhouseNav,
 	    WidgetNav,
-	    LineChart
+	    LineChart,
+	    DensityChart
     },
     data () {
 	return {
@@ -89,6 +90,9 @@ export default {
 	    fullData: null,
 	    probes: null,
 	    selectedProbes: null,
+	    probesCoords: null,
+	    svgwidth: null,
+	    parMax: null,
 	    error: ''
 	}
     },
@@ -126,6 +130,35 @@ export default {
 	    
 	    this.plotData = tempData
 	},
+	findMax(data) {
+	    //console.log("Max", data)
+	    let prnames = []
+	    let paramsMax = {}
+	    
+	    Object.keys(data.data).map( k => {
+		let key = k.split(" ")[0]
+		if (!prnames.includes(key)) {
+		    prnames.push(key)
+		}
+	    })
+	    prnames.map( pn => {
+		Object.keys(data.data).map(k => {
+		    if (k.startsWith(pn)) {
+			let localmax = Math.max(...data.data[k])
+			if (paramsMax[pn] ) {
+			    if (paramsMax[pn] <= localmax) {
+				paramsMax[pn] = localmax
+			    }
+			} else {
+			    paramsMax[pn] = localmax
+			}
+		    }
+		})
+	    })
+	    //console.log("Max", paramsMax)
+	    this.parMax = paramsMax
+	    
+	},
 	preformatData(data){
 	    let outdata = {}
 	    let indices = {}
@@ -147,7 +180,10 @@ export default {
 	    this.uuid = value.uuid
 	},
 	fetchData() {
+	    this.svgwidth = document.getElementById("parent-svg-container").offsetWidth/2
 	    let params = {}
+	    let probeparams = {}
+	    console.log("Fetch Data")
 	    params.ts_from = moment(this.selectedDate.start).unix()
 	    params.ts_to = moment(this.selectedDate.end).unix()
 	    params.unixdate = 1
@@ -155,15 +191,36 @@ export default {
 	    params.dataonly = 1
 	    if ( this.uuid ) {
 		params.suuid = this.uuid
+		probeparams.suuid = this.uuid
 	    }
-	    this.$axios.get(this.$backendhost+'data', { params: params })
+	    
+	    //get probes coords
+	    
+	    this.$axios.get(this.$backendhost+'probes', { params: probeparams })
 		.then(request => {
-		    this.plotData = request.data.data
-		    this.fullData = {...this.plotData}
-		    this.preformatData(request.data.data)
-		}
-		     )
+		    this.probesCoords = {}
+		    request.data.map( obj => {
+			let coords = {}
+			coords.x = obj.x
+			coords.y = obj.y
+			coords.z = obj.z
+			this.probesCoords[obj.uuid] = coords
+		    })
+		})
+		.then( req => {
+		    this.$axios.get(this.$backendhost+'data', { params: params })
+			.then(request1 => {
+			    this.plotData = request1.data.data
+			    this.fullData = {...this.plotData}
+			    this.preformatData(request1.data.data)
+			    this.findMax(request1.data.data)
+			}
+			     )
+			.catch(request => console.log(request1))
+		})
 		.catch(request => console.log(request))
+	    
+	    //get data
 	    
 	}
     }

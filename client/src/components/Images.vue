@@ -38,17 +38,21 @@
 	    <div class="col-md-12">
 	      <form>
 		<div class="form-group">
-		  <label for="formControlRange">Range input for diseased zones heatmap </label>
+		  <label for="formControlRange">
+		    <span v-if="barplotDate" >Images from {{barplotDate.name | moment_date_filter}} </span>
+		    <span v-if="camerasTimeRange"> {{camerasTimeRange | moment_time_filter}}<span>
+		  </label>
 		  <input type="range" v-model="heatmapIndex" min="0" :max="heatmapCount-1" @change="changeHeatmapZone" class="form-control-range" id="formControlRange">
 		</div>
 	      </form>
 
 	      Greenhouse plan with diseased zones highlighted (select zone to show zone pictures)
+	      
 	      <HeatMap v-if="currentHeatmapZone" title="HeatMap" xKey="name" yKey="amount" :data="currentHeatmapZone" @camIdChanged="updateCamID"/>
 	    </div>
 	  </div>
 	  
-	  <div class="row">
+	  <div class="row"
 	    <div class="col-md-12">
 	      <small>
 		<table class="table table-hover">
@@ -85,7 +89,7 @@
 		      <td class="align-middle">{{row.greenhouse}}</td>
 		      <td class="align-middle">{{row.location}}</td>
 		      <td class="align-middle">{{row.zone}}</td>
-		      <td class="align-middle">{{row.time}}</td>
+		      <td class="align-middle">{{row.time | moment_time_filter }}</td>
 		      <td class="align-middle">{{row.warnings}}</td>
 		  </tbody>
 		</table>
@@ -128,7 +132,8 @@ export default {
 	    heatmapCount: 0,
 	    heatmapIndex: null,
 	    currentCamID: null,
-	    cameraImagery: null
+	    cameraImagery: null,
+	    camerasTimeRange: null
 	    
 	}
     },
@@ -140,16 +145,25 @@ export default {
     updated () {
     },
     filters: {
-	moment_filter: function(date) {
-	    let newdate = moment(date).utcOffset("+00:00").format("DD-MM-YYYY HH:mm")
+	moment_date_filter: function(date) {
+	    let newdate = moment(date).utcOffset("+00:00").format("DD-MM-YY")
+	    return newdate
+	},
+	moment_datetime_filter: function(date) {
+	    let newdate = moment(date).utcOffset("+00:00").format("DD-MM-YY HH:mm")
+	    return newdate
+	},
+	moment_time_filter: function(date) {
+	    let newdate = moment(date).utcOffset("+00:00").format("HH:mm")
 	    return newdate
 	}
+
     },
     methods: {
 	updateCamID(value) {
 	    this.currentCamID = value.camid
-	    console.log("CAM VALUE", value)
 	    this.cameraImagery = null
+	    console.log("CURRENT CAM", this.currentCamID)
 	    this.$axios.get(this.$backendhost+'cameras/' + this.currentCamID)
 		.then(request => {
 		    this.cameraImagery = []
@@ -157,7 +171,7 @@ export default {
 			let datarow = {}
 			datarow.imagery = d.pictures[0].preview
 			datarow.fullsize = d.pictures[0].fpath
-			datarow.greenhouse = 'test'
+			datarow.greenhouse = value.camlocation
 			datarow.location = value.camlabel
 			datarow.zone = "pos " + d.poslabel
 			datarow.time = d.pictures[0].ts
@@ -170,7 +184,7 @@ export default {
 	    
 	},
 	updateBarplotDate(value) {
-	    console.log("Date changed", moment(value.name).unix())
+	    console.log("Date changed", value.name, moment(value.name).unix())
 	    this.barplotDate = value
 	    let params = {}
 	    params.ts_from = moment(value.name).unix()
@@ -185,7 +199,10 @@ export default {
 		    this.heatmapIndex = 0
 		    this.heatmapCount = Object.keys(this.heatmapZones).length
 		    this.currentHeatmapZone = this.heatmapZones[Object.keys(this.heatmapZones)[this.heatmapIndex]]
-		    console.log(this.heatmapCount, this.currentHeatmapZone)
+		    console.log("Heatmap zone0", this.heatmapCount, this.currentHeatmapZone)
+		    if (this.currentHeatmapZone) {
+			this.camerasTimeRange = this.currentHeatmapZone[0].ts
+		    }
 		}
 		     )
 		.catch(request => console.log(request))
@@ -194,6 +211,11 @@ export default {
 	},
 	changeHeatmapZone() {
 	    this.currentHeatmapZone = this.heatmapZones[Object.keys(this.heatmapZones)[this.heatmapIndex]]
+	    console.log("Heatmap zone1", this.currentHeatmapZone)
+	    if (this.currentHeatmapZone) {
+		this.camerasTimeRange = this.currentHeatmapZone[0].ts
+	    }
+
 	},
 	updateParams(value) {
 	    this.activeItem = value.activeItem

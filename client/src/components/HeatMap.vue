@@ -39,8 +39,9 @@ export default {
 	drawPlot() {
 	    select("#heatmap-chart").selectAll("*").remove()
 	    select(".heatmapGroup").remove()
-
 	    var colors = [ '#e0f7d2', '#fa5061' ]
+
+	    console.log("HM DATA", this.data)
 	    
 	    var colorDomain = extent(this.data, function(d){
 		return d.numwarnings
@@ -75,17 +76,20 @@ export default {
 		    return 100 * (i / (colors.length - 1)) + '%';
 		})
 	    
-	    var rect = svg.selectAll("rect")
+	    var rect_g = svg.selectAll("rect")
 		.data(this.data)
 		.enter()
-		.append("rect")
+		.append("g")
+
+	    rect_g.append("rect")
+		.attr("class", "rect-heatmap")
 		.attr("x", d => {
-		    return d.x * this.svgWidth*0.3/this.data.length
+		    return d.x * this.svgWidth*0.29/this.data.length
 		})
 		.attr("y", d => {
-		    return d.y * this.svgHeight*0.7/this.data.length
+		    return d.y * this.svgHeight*0.7/this.data.length			
 		})
-		.attr("width", this.svgWidth*0.3/this.data.length)
+		.attr("width", this.svgWidth*0.28/this.data.length)
 		.attr("height", this.svgHeight*0.7)
 		.style("fill", d => {
 		    return colorScale(d.numwarnings); 
@@ -93,6 +97,19 @@ export default {
 	    	.on("click", val => {
 		    this.$emit('camIdChanged', val)
 		})
+
+	    rect_g.append("text") 
+		.text(d => {
+		    return d.camlabel
+		})
+		.style("font-size", "10px")
+		.attr("transform", (d, i) => {
+		    let dx = d.x * this.svgWidth*0.29/this.data.length + 3
+		    let dy = 76
+		    return "translate(" + dx + "," + dy + ")"
+		    
+		})
+	    
 
 	    
 	    var legend = svg.append('g')
@@ -112,16 +129,20 @@ export default {
 		.attr("text-anchor", "end")
 		.attr("y",  legend_y + 10)
 		.attr("x", legend_x*3.1)
-		.text(colorDomain[1]);
+		.text(colorDomain[1])
 	    
 	    legend.append("text")
 		//.attr("class", "legendText")
 		//.attr("text-anchor", "end")
 		.attr("y",  legend_y + 10)
 		.attr("x", legend_x*0.7)
-		.text(colorDomain[0]);
+		.text(colorDomain[0])
 	    
-
+	    legend.append("text")
+	    	.attr("y",  legend_y + 20)
+		.attr("x", legend_x*1.1)
+	    	.style("font-size", "10px")
+		.text("Number of diseased zones")
 	},
     },
     computed: {
@@ -151,7 +172,7 @@ export default {
 		.domain([this.dataMin > 0 ? 0 : this.dataMin, this.dataMax]);
 	},
 	svgHeight() {
-	    return this.svgWidth *0.08/// 1.61803398875; // golden ratio
+	    return this.svgWidth *0.1/// 1.61803398875; // golden ratio
 	}
     }
 };
@@ -159,8 +180,9 @@ export default {
 
 <style>
   
-.rect-positive {
-    fill: white;
+.rect-heatmap:hover {
+    stroke: white;
+    stroke-width: 3;
     transition: r 0.2s ease-in-out;
 }
 
