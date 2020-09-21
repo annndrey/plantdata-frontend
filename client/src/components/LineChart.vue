@@ -160,10 +160,7 @@ export default {
 		.attr("height", this.svgHeight )
 		.attr("x", this.svgWidth*0.01)
 		.attr("y", 0)
-	    
-	    //var scatter = svg.append('g')
-		
-	    
+
 	    var lineGroup = svg.append("g")
 		.attr("clip-path", "url(#clip)")
 		.attr("transform", "translate(" + this.svgWidth*0.01 +  ", " + this.svgHeight * .2 + ")")
@@ -192,7 +189,7 @@ export default {
 			.attr('stroke', colors[i])
 			.attr("id", "line"+colors[i])
 			.style("opacity", 1)
-		    
+		    // line animation
 		    //let lnLength = ln.node().getTotalLength()
 		    
 		    //ln.attr("stroke-dasharray", lnLength + " " + lnLength)
