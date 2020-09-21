@@ -28,7 +28,8 @@
 	</button>
       </li>
     </ul>
-    <ul class="navbar-nav mx-auto justify-content-center">
+    
+    <!--<ul class="navbar-nav mx-auto justify-content-center">
       <li class="nav-item">
 	<button type="button" class="btn widgetButton">
 	  <svg width="0.8em" height="0.8em" viewBox="0 0 16 16" class="bi bi-calendar" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -38,6 +39,7 @@
 	</button>
       </li>
     </ul>
+    -->
     
     <ul class="navbar-nav ml-auto">
       <li class="nav-item">

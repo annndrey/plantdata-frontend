@@ -8,9 +8,10 @@
 <script>
 import { scaleLinear, scalePoint, scaleBand, scaleTime } from "d3-scale";
 import { max, min } from "d3-array";
+import * as d3 from 'd3'
 import { select, selectAll } from "d3-selection";
 import { transition } from "d3-transition";
-import { axisBottom, axisLeft, line, easeLinear, animate } from 'd3';
+import { axisBottom, axisLeft, line, easeLinear, animate} from 'd3';
 import moment from 'moment'
 
 export default {
@@ -45,11 +46,13 @@ export default {
 	    var plotdata = []
 	    var colors = ['orange', 'steelblue', 'red', 'purple', 'cyan', 'magenta', 'gray']
 	    var datakeys = []
+	    
 	    Object.keys(this.data.data).map( k => {
 		var objlist = []
 		datakeys.push(k)
 		this.data.labels.map((obj, index) => {
-		    let label = moment(obj).locale('en').format('DD/MM/YY HH:mm')
+		    console.log("label", obj)
+		    let label = moment(obj).toDate()
 		    let val =  this.data.data[k][index]
 		    objlist.push({"date": label, "value": val})
 		})
@@ -57,28 +60,40 @@ export default {
 	    })
 	    
 	    
-	    let xticks = this.data.labels.map((obj) => {
-		return  moment(obj).locale('en').format('HH:mm')
+	    //let xticks = this.data.labels.map((obj) => {
+	//	return  moment(obj).locale('en').format('HH:mm')
+	 //   })
+	    
+	    let xtickstime = this.data.labels.map((obj) => {
+		return  moment(obj).toDate()
 	    })
-
-	    if (xticks.length > 30) {
-		let ratio = Math.ceil(xticks.length / 30)
-		xticks = xticks.filter(function (value, index, ar) {
-		    return (index % ratio == 0);
-		} )
-	    }
+	    
+	    //if (xticks.length > 30) {
+	//	let ratio = Math.ceil(xticks.length / 30)
+	///	xticks = xticks.filter(function (value, index, ar) {
+	//	    return (index % ratio == 0);
+	//	} )
+	  //  }
 	    
 	    const datalists = Object.keys(this.data.data).map((k) => this.data.data[k])
+	    console.log("Datalists", datalists)
 	    const highestAmount = max(datalists.map(d => max(d)))
-
 	    let yticks = Array.from({length:highestAmount},(v,k)=>k)
 	    
-	    var x = scalePoint()
-		.domain(xticks)  
-		.range([this.svgWidth*0.040, this.svgWidth*0.97])
-
+	    //var x = scalePoint()
+		//.domain(xticks)
+		//.range([this.svgWidth*0.01, this.svgWidth*0.99])
+	    //.range([this.svgWidth*0.040, this.svgWidth*0.97])
+	    
+	    var xtime = scaleTime()
+		.domain([xtickstime[0], xtickstime[xtickstime.length-1]])
+		//.domain(d3.extent(...xtickstime))
+		.range([this.svgWidth*0.01, this.svgWidth*0.99])
+		//.nice()
+	    
 	    var miny = min(yticks)
 	    var maxy = max(yticks)
+	    
 	    if (miny == null && maxy == null) {
 		miny = 0
 		maxy = 100
@@ -86,23 +101,30 @@ export default {
 
 	    }
 	    var y = scaleLinear()
-		.domain([min(yticks), max(yticks)])
+		.domain([miny, maxy])
 		.range([this.svgHeight, 0])
 
 	    var svg = select("#line-chart")
 	    	.attr("width", this.svgWidth)
 		.attr("height", this.svgHeight+100)
+	    
+	    //svg.append("defs").append("clipPath")
+		//.attr("id", "clip")
+		//.append("rect")
+	    	//.attr("width", this.svgWidth)
+		//.attr("height", this.svgHeight*1.2)
 
-	    var xlabels = svg.append("g")
+    	    var xlabelstime = svg.append("g")
 	    	.attr("class", "axisBottom")
-	    	.attr("transform", "translate(0," + this.svgHeight * 1.2 + ")")
-		.call(axisBottom(x)
+	    	.attr("transform", "translate(" + this.svgWidth * 0.01 + "," + this.svgHeight * 1.2 + ")")
+		.call(axisBottom(xtime)
+		      .ticks(24)
+		      .tickFormat(d3.timeFormat("%H:%M"))
 		      .tickSize(-this.svgHeight, 0, 0)
 		     )
 	    
-	    
-	    xlabels.selectAll(".tick line").attr("stroke", "lightgray").attr("stroke-dasharray", "1,4")
-	    xlabels.selectAll(".tick")
+	    xlabelstime.selectAll(".tick line").attr("stroke", "lightgray").attr("stroke-dasharray", "1,4")
+	    xlabelstime.selectAll(".tick")
 		.each(function (d,i) {
 		    select(this)
 			.attr("color", function() {
@@ -113,7 +135,7 @@ export default {
 			    }
 			})
 		})
-	    
+	    //yaxis
 	    var ylabels = svg.append("g")
 		.attr("class", "axisLeft")
 	    	.attr("transform", "translate(22," + this.svgHeight * 0.2 +")")
@@ -135,12 +157,13 @@ export default {
 		})
 
 	    var lineGroup = svg.append("g")
-	        .attr("transform", "translate(10," + this.svgHeight * .2 + ")")
+		.attr("transform", "translate(" + this.svgWidth*0.01 +  ", " + this.svgHeight * .2 + ")")
 		.attr("class", "lineGroup")
 		.attr('height', this.svgHeight * 0.8)
+	    
 	    var l = line()
 		.x(d => {
-		    return this.xScale(d.date)
+		    return xtime(d.date)
 		})
 		.y(d =>{
 		    return y(d.value)
@@ -156,19 +179,19 @@ export default {
 		.attr("class", "line")
 		.each(function(d,i) {
 		    var ln  = select(this)
-		    ln.attr("class", "line"+i)
+		    ln.attr("class", "line line"+i)
 			.attr('stroke', colors[i])
 			.attr("id", "line"+colors[i])
 			.style("opacity", 1)
 		    
-		    let lnLength = ln.node().getTotalLength()
+		    //let lnLength = ln.node().getTotalLength()
 		    
-		    ln.attr("stroke-dasharray", lnLength + " " + lnLength)
-			.attr("stroke-dashoffset", lnLength)
-			.transition()
-			.duration(2800)
-			.ease(easeLinear)
-			.attr("stroke-dashoffset", 0)
+		    //ln.attr("stroke-dasharray", lnLength + " " + lnLength)
+			//.attr("stroke-dashoffset", lnLength)
+			//.transition()
+			//.duration(2800)
+			//.ease(easeLinear)
+			//.attr("stroke-dashoffset", 0)
 		})
 
 	    var textlegend = svg.append("g")
@@ -198,9 +221,6 @@ export default {
 				var selectedText = select(textid)
 				var lineOpacity = selectedLine.style("opacity") == 0 ? 1 : 0
 				var textColor = selectedText.attr("fill") == colors[i-1] ? "lightgrey" : colors[i-1] 
-				// Hide or show the elements
-				//select(textid).style("opacity", textOpacity)
-				
 				select(lineid)
 				    .transition()
 				    .duration(300)
@@ -210,6 +230,55 @@ export default {
 				//selectedLine.active = active
 			    })
 		    }})
+	    var zoom = d3.zoom()
+		.scaleExtent([0.5, 20]) 
+		.extent([[0, 0], [this.svgWidth, this.svgHeight]])
+		.on("zoom", updateChart)
+	    
+	    var margin = {top: this.svgHeight*0.2, right: 30, bottom: 30, left: 0}
+	    
+	    // append an invisible rect to svg to catch all pointer events
+	    svg.append("rect")
+		.attr("width", this.svgWidth)
+		.attr("height", this.svgHeight)
+		.style("fill", "none")
+		.style("pointer-events", "all")
+		.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+		.call(zoom)
+	    
+	    var svgHeight = this.svgHeight
+	    var svgWidth = this.svgWidth
+	    
+	    function updateChart() {
+		//console.log("update chart")
+		var newX = d3.event.transform.rescaleX(xtime);
+		var newY = d3.event.transform.rescaleY(y);
+		
+		// update axes with these new boundaries
+		//
+		xlabelstime.call(d3.axisBottom(newX)
+				 .tickFormat(d3.timeFormat("%H:%M"))
+				 .tickSize(-svgHeight, 0, 0)
+				)
+		xlabelstime.selectAll(".tick line").attr("stroke", "lightgray").attr("stroke-dasharray", "1,4")
+		ylabels.call(d3.axisLeft(newY)
+			     .tickSize(-svgWidth, 0, 0)
+			    )
+		ylabels.selectAll(".tick line").attr("stroke", "lightgray").attr("stroke-dasharray", "1,4")
+		// update lines position
+		var zoomedLine = l
+		    .x(function(d) {
+			//console.log("X zoomed line", newX(moment(d.date, "DD/MM/YY HH:mm").toDate()))
+			return newX(d.date)
+		    })
+		    .y(function(d) {
+			//console.log("Y zoomed line", newY(d.value))
+			return newY(d.value)
+		    })
+		
+		svg.selectAll("path.line")
+		    .attr("d",  function(d) {return zoomedLine(d)})
+	    }
 	},
 	AddResizeListener() {
 	    // redraw the chart 300ms after the window has been resized
@@ -242,6 +311,16 @@ export default {
 		    this.data.labels.map((obj) => {
 			//console.log('scale', moment(obj).locale('en').format('HH:mm'))
 			return moment(obj).locale('en').format('DD/MM/YY HH:mm')
+		    })
+		)
+	},
+	xScaleTime() {
+	    return scaleTime()
+		.range([this.svgWidth*0.01, this.svgWidth*0.99])
+		.domain(
+		    this.data.labels.map((obj) => {
+			//console.log('scale', moment(obj).locale('en').format('HH:mm'))
+			return moment(obj).toDate()//locale('en').format('DD/MM/YY HH:mm')
 		    })
 		)
 	},

@@ -104,6 +104,7 @@ export default {
 		this.$router.replace({ name: this.$route.name, params: {id:this.activeItem} })
 		    .catch(()=>{})
 	    }
+	    
 	    this.$axios.get(this.$backendhost+'sensors')
 		.then(request => { this.setData('sensors', request)
 				   this.allLoading = false
