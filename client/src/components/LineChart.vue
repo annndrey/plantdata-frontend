@@ -51,7 +51,6 @@ export default {
 		var objlist = []
 		datakeys.push(k)
 		this.data.labels.map((obj, index) => {
-		    console.log("label", obj)
 		    let label = moment(obj).toDate()
 		    let val =  this.data.data[k][index]
 		    objlist.push({"date": label, "value": val})
@@ -76,7 +75,6 @@ export default {
 	  //  }
 	    
 	    const datalists = Object.keys(this.data.data).map((k) => this.data.data[k])
-	    console.log("Datalists", datalists)
 	    const highestAmount = max(datalists.map(d => max(d)))
 	    let yticks = Array.from({length:highestAmount},(v,k)=>k)
 	    
@@ -155,8 +153,19 @@ export default {
 			    }
 			})
 		})
-
+	    var clip = svg.append("defs").append("svg:clipPath")
+		.attr("id", "clip")
+		.append("svg:rect")
+		.attr("width", this.svgWidth )
+		.attr("height", this.svgHeight )
+		.attr("x", this.svgWidth*0.01)
+		.attr("y", 0)
+	    
+	    //var scatter = svg.append('g')
+		
+	    
 	    var lineGroup = svg.append("g")
+		.attr("clip-path", "url(#clip)")
 		.attr("transform", "translate(" + this.svgWidth*0.01 +  ", " + this.svgHeight * .2 + ")")
 		.attr("class", "lineGroup")
 		.attr('height', this.svgHeight * 0.8)
@@ -250,7 +259,6 @@ export default {
 	    var svgWidth = this.svgWidth
 	    
 	    function updateChart() {
-		//console.log("update chart")
 		var newX = d3.event.transform.rescaleX(xtime);
 		var newY = d3.event.transform.rescaleY(y);
 		
@@ -268,11 +276,9 @@ export default {
 		// update lines position
 		var zoomedLine = l
 		    .x(function(d) {
-			//console.log("X zoomed line", newX(moment(d.date, "DD/MM/YY HH:mm").toDate()))
 			return newX(d.date)
 		    })
 		    .y(function(d) {
-			//console.log("Y zoomed line", newY(d.value))
 			return newY(d.value)
 		    })
 		
@@ -303,26 +309,6 @@ export default {
 	    return min(this.data, d => {
 		return d[this.yKey];
 	    });
-	},
-	xScale() {
-	    return scalePoint()
-		.range([this.svgWidth*0.01, this.svgWidth*0.99])
-		.domain(
-		    this.data.labels.map((obj) => {
-			//console.log('scale', moment(obj).locale('en').format('HH:mm'))
-			return moment(obj).locale('en').format('DD/MM/YY HH:mm')
-		    })
-		)
-	},
-	xScaleTime() {
-	    return scaleTime()
-		.range([this.svgWidth*0.01, this.svgWidth*0.99])
-		.domain(
-		    this.data.labels.map((obj) => {
-			//console.log('scale', moment(obj).locale('en').format('HH:mm'))
-			return moment(obj).toDate()//locale('en').format('DD/MM/YY HH:mm')
-		    })
-		)
 	},
 	yScale() {
 	    return scaleLinear() 
