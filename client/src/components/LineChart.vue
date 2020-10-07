@@ -44,45 +44,41 @@ export default {
 	    select(".lineGroup").remove()
 	    const vm = this
 	    var plotdata = []
-	    var colors = ['orange', 'steelblue', 'red', 'purple', 'cyan', 'magenta', 'gray']
+	    var colors = ['orange', 'steelblue', 'red',
+			  'purple', 'cyan', 'magenta',
+			  'gray', 'aquamarine', 'chartreuse',
+			  'crimson', 'darkblue', 'darkolivegreen',
+			  'darkorange', 'darkorchid', 'darkslateblue',
+			  'deeppink', 'deepskyblue', 'forestgreen',
+			  'fuchsia', 'goldenrod', 'indianred',
+			  'indigo', 'lightcoral', 'lightgreen',
+			  'lightseagreen', 'mediumblue', 'mediumslateblue'
+			 ]
 	    var datakeys = []
-	    
+
 	    Object.keys(this.data.data).map( k => {
 		var objlist = []
 		datakeys.push(k)
-		this.data.labels.map((obj, index) => {
+		var datalabels = this.data.probelabels[k.slice(3, k.length)]
+		//console.log("datalabels", k, datalabels)
+		datalabels.map((obj, index) => {
 		    let label = moment(obj).toDate()
 		    let val =  this.data.data[k][index]
 		    objlist.push({"date": label, "value": val})
 		})
 		plotdata.push(objlist)
 	    })
-	    
-	    
-	    //let xticks = this.data.labels.map((obj) => {
-	//	return  moment(obj).locale('en').format('HH:mm')
-	 //   })
+
+	    console.log("Plot data", plotdata)
 	    
 	    let xtickstime = this.data.labels.map((obj) => {
 		return  moment(obj).toDate()
 	    })
 	    
-	    //if (xticks.length > 30) {
-	//	let ratio = Math.ceil(xticks.length / 30)
-	///	xticks = xticks.filter(function (value, index, ar) {
-	//	    return (index % ratio == 0);
-	//	} )
-	  //  }
-	    
 	    const datalists = Object.keys(this.data.data).map((k) => this.data.data[k])
 	    const highestAmount = max(datalists.map(d => max(d)))
 	    let yticks = Array.from({length:highestAmount},(v,k)=>k)
-	    
-	    //var x = scalePoint()
-		//.domain(xticks)
-		//.range([this.svgWidth*0.01, this.svgWidth*0.99])
-	    //.range([this.svgWidth*0.040, this.svgWidth*0.97])
-	    
+
 	    var xtime = scaleTime()
 		.domain([xtickstime[0], xtickstime[xtickstime.length-1]])
 		//.domain(d3.extent(...xtickstime))
@@ -90,8 +86,8 @@ export default {
 		//.nice()
 	    
 	    var miny = min(yticks)
-	    var maxy = max(yticks)
-	    
+	    var maxy = max(yticks) + 10
+	    console.log("MAX Y ", maxy, yticks, highestAmount, datalists.map(d => max(d)))
 	    if (miny == null && maxy == null) {
 		miny = 0
 		maxy = 100
@@ -106,11 +102,6 @@ export default {
 	    	.attr("width", this.svgWidth)
 		.attr("height", this.svgHeight+100)
 	    
-	    //svg.append("defs").append("clipPath")
-		//.attr("id", "clip")
-		//.append("rect")
-	    	//.attr("width", this.svgWidth)
-		//.attr("height", this.svgHeight*1.2)
 
     	    var xlabelstime = svg.append("g")
 	    	.attr("class", "axisBottom")
@@ -200,44 +191,109 @@ export default {
 			//.attr("stroke-dashoffset", 0)
 		})
 
-	    var textlegend = svg.append("g")
-	    	.append("text")
-	    	.attr("class", "textlegend")
-		.attr("x", "50%")
-		.attr("y", "5%")
-		.attr("dominant-baseline", "middle")
-		.attr("text-anchor", "middle")
-		.data(colors)
+	    
+	    //lineGroup.selectAll("g.dot")
+		//.data(plotdata)
+		//.enter().append("g")
+		//.attr("class", "dot")
+		//.selectAll("circle")
+		//.data(function(d) { return d; })
+		//.enter().append("circle")
+		//.style("fill", "#61a3a9")
+		//.style("opacity", 0.5)
+		//.attr("r", 3)
+		//.attr("cx", function(d,i) { return xtime(d.date); })
+	    //.attr("cy", function(d,i) { return y(d.value); })
+
+	    var filtered_colors = colors.filter(function(c,i){
+		if (datakeys[i-1]) {
+		    return c
+		}})
+
+	    var localprobedata = this.probedata
+	    d3.select("#sensorbuttons").html("")
+	    
+	    var buttonsdiv = d3.select("#sensorbuttons")
+		.selectAll("button")
+		.data(filtered_colors)
 		.enter()
-		.each((d,i) => {
-		    var textdata = datakeys[i-1]
-		    if (textdata) {
-			var text = select(".textlegend")
-			var tspan = text.append("tspan")
-			let [sens, prb] = textdata.split(" ")
-			tspan.text(" " + sens + " Probe #" + this.probedata[prb] + " ")
-			tspan.attr('font-size', '0.8em')
-			tspan.attr('fill', colors[i-1])
-			tspan.attr("id", "text" + colors[i-1])
-			//show/hide onclick
-			    .on("click", function(){
-				var lineid = "#line"+colors[i-1]
-				var textid = "#text"+colors[i-1]
-				var selectedLine = select(lineid)
-				var selectedText = select(textid)
-				var lineOpacity = selectedLine.style("opacity") == 0 ? 1 : 0
-				var textColor = selectedText.attr("fill") == colors[i-1] ? "lightgrey" : colors[i-1] 
-				select(lineid)
-				    .transition()
-				    .duration(300)
-				    .style("opacity", lineOpacity)
-				selectedText.attr("fill", textColor)
-				// Update whether or not the elements are active
-				//selectedLine.active = active
-			    })
-		    }})
+		.append("input")
+		.attr("type","button")
+		.attr("class","btn btn-sm ml-1 mt-1")
+		.style('font-size', 'x-small')
+		.style("background-color", "#f6f7f9")
+		.style("border-radius", "13px")
+	    	.style("color", function (d,i){
+		    return colors[i]
+		})
+	    	.attr("id", function (d,i){
+		    return "text"+colors[i]
+		})
+		.attr("value", function (d,i){
+		    let textdata = datakeys[i]
+		    console.log("textdata", textdata)
+		    let [sens, prb] = textdata.split(" ")
+		    let button_text = " " + sens + " Probe #" + localprobedata[prb] + " "
+		    return button_text
+
+		})
+	    	.on("click", function(d,i){
+		    console.log(i)
+		    var lineid = "#line"+colors[i]
+		    var textid = "#text"+colors[i]
+		    var selectedLine = select(lineid)
+		    var selectedText = select(textid)
+		    var lineOpacity = selectedLine.style("opacity") == 0 ? 1 : 0
+		    var textColor = selectedText.attr("color") == colors[i] ? "lightgrey" : colors[i] 
+		    select(lineid)
+			.transition()
+			.duration(300)
+			.style("opacity", lineOpacity)
+		    selectedText.attr("color", textColor)
+		    // Update whether or not the elements are active
+		    //selectedLine.active = active
+		})
+
+	    
+	    //var textlegend = svg.append("g")
+	    //	.append("text")
+	    ///	.attr("class", "textlegend")
+	//	.attr("x", "50%")
+	//	.attr("y", "5%")
+	//	.attr("dominant-baseline", "middle")
+	//	.attr("text-anchor", "middle")
+	//	.data(colors)
+	//	.enter()
+	//	.each((d,i) => {
+	//	    var textdata = datakeys[i-1]
+	//	    if (textdata) {
+	//		var text = select(".textlegend")
+	//		var tspan = text.append("tspan")
+	//		let [sens, prb] = textdata.split(" ")
+	//		tspan.text(" " + sens + " Probe #" + this.probedata[prb] + " ")
+	//		tspan.attr('font-size', '0.8em')
+	//		tspan.attr('fill', colors[i-1])
+	//		tspan.attr("id", "text" + colors[i-1])
+	//		//show/hide onclick
+	//		    .on("click", function(){
+	//			var lineid = "#line"+colors[i-1]
+	//			var textid = "#text"+colors[i-1]
+	//			var selectedLine = select(lineid)
+	//			var selectedText = select(textid)
+	//			var lineOpacity = selectedLine.style("opacity") == 0 ? 1 : 0
+	//			var textColor = selectedText.attr("fill") == colors[i-1] ? "lightgrey" : colors[i-1] 
+	//			select(lineid)
+	//			    .transition()
+	//			    .duration(300)
+	//			    .style("opacity", lineOpacity)
+	//			selectedText.attr("fill", textColor)
+	//			// Update whether or not the elements are active
+	//			//selectedLine.active = active
+	//		    })
+	//	    }})
 	    var zoom = d3.zoom()
-		.scaleExtent([0.5, 20]) 
+		.scaleExtent([1, 30])
+		.translateExtent([[0, 0], [this.svgWidth, this.svgHeight]])
 		.extent([[0, 0], [this.svgWidth, this.svgHeight]])
 		.on("zoom", updateChart)
 	    
@@ -281,6 +337,11 @@ export default {
 		
 		svg.selectAll("path.line")
 		    .attr("d",  function(d) {return zoomedLine(d)})
+		
+		//svg.selectAll("circle")
+		//    .attr('cx', function(d) {return newX(d.date)})
+		//    .attr('cy', function(d) {return newY(d.value)})
+		
 	    }
 	},
 	AddResizeListener() {

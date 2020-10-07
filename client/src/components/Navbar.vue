@@ -9,13 +9,13 @@
     <div class="collapse navbar-collapse" id="collapseMenu">
       <ul class="navbar-nav mr-auto">
 	<li v-if="currentUser" class="nav-item" >
-	  <router-link @click.native="closeMenu($event)" class="btn nav-link" :to="{ name: 'Stats' }"> Main Page </router-link>
+	  <router-link @click.native="closeMenu($event)" class="btn btn-primary nav-link" :to="{ name: 'Stats' }"> Main Page </router-link>
 	</li>
 	<li v-if="currentUser" class="nav-item">
-	  <router-link @click.native="closeMenu($event)" class="btn nav-link" to="/logout"> Logout </router-link>
+	  <router-link @click.native="closeMenu($event)" class="btn btn-primary nav-link" to="/logout"> Logout </router-link>
 	</li>
 	<li v-else class="nav-item">
-	  <router-link @click.native="closeMenu($event)" class="btn nav-link" to="/login"> Login </router-link>
+	  <router-link @click.native="closeMenu($event)" class="btn btn-primary nav-link" to="/login"> Login </router-link>
 	</li>
       </ul>
       

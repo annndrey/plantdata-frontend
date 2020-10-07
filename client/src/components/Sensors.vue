@@ -29,10 +29,10 @@
 	<div class="container container-rounded" id="parent-svg-container">
 
 	  <div class="row">
-	    <div class="col-md-12">
-
-	      <span  v-for="(val, ind) in probes" :key="val" @click="modifyData(ind, $event)"> Probe #{{val}}</span>
-	      
+	    <div class="col-md-12 mt-2">
+	      <button type="button" class="btn btn-outline-primary btn-sm ml-1" style="background-color: transparent important!;"v-for="(val, ind) in probes" :key="val" @click="modifyData(ind, $event)">
+		Probe #{{val}}
+	      </button>
 	    </div>
 	  </div>
 
@@ -40,6 +40,10 @@
 	    <div class="col-md-12">
 	  
 	      <span v-show="activeItem == 'barchart'">
+		<div class="row">
+		  <div class="col-md-12" id="sensorbuttons">
+		  </div>
+		</div>
 		<LineChart title="Line Chart" xKey="name" yKey="amount" :data="plotData" :probedata="probes"/>
 	      </span>
 
@@ -246,4 +250,17 @@ export default {
   .greytext {
       color: lightgray;
   }
+  .btn-outline-primary {
+      border-color: transparent;
+      color: #1f6c39;
+      border-radius: 13px;
+      background-color: #f6f7f9;
+      //font-size: 0.6em;
+	    
+  }
+  .btn-outline-primary:hover {
+      background-color: #1f6c39;
+      color: white;
+  }
+  
 </style>
