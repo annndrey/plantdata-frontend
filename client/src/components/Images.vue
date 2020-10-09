@@ -48,7 +48,7 @@
 
 	      Greenhouse plan with diseased zones highlighted (select zone to show zone pictures)
 	      
-	      <HeatMap v-if="currentHeatmapZone" title="HeatMap" xKey="name" yKey="amount" :data="currentHeatmapZone" @camIdChanged="updateCamID"/>
+	      <HeatMap v-if="currentHeatmapZone" title="HeatMap" xKey="name" yKey="amount" :data="currentHeatmapZone" :dimX="dimX" :dimY="dimY"  @camIdChanged="updateCamID"/>
 	    </div>
 	  </div>
 	  
@@ -133,7 +133,9 @@ export default {
 	    heatmapIndex: null,
 	    currentCamID: null,
 	    cameraImagery: null,
-	    camerasTimeRange: null
+	    camerasTimeRange: null,
+	    dimX: null,
+	    dimY: null
 	    
 	}
     },
@@ -163,20 +165,21 @@ export default {
 	updateCamID(value) {
 	    this.currentCamID = value.camid
 	    this.cameraImagery = null
-	    console.log("CURRENT CAM", this.currentCamID)
 	    this.$axios.get(this.$backendhost+'cameras/' + this.currentCamID)
 		.then(request => {
 		    this.cameraImagery = []
 		    request.data.positions.map(d => {
-			let datarow = {}
-			datarow.imagery = d.pictures[0].preview
-			datarow.fullsize = d.pictures[0].fpath
-			datarow.greenhouse = value.camlocation
-			datarow.location = value.camlabel
-			datarow.zone = "pos " + d.poslabel
-			datarow.time = d.pictures[0].ts
-			datarow.warnings = d.pictures[0].numwarnings
-			this.cameraImagery.push(datarow)
+			if (d.pictures[0]) {
+			    let datarow = {}
+			    datarow.imagery = d.pictures[0].preview
+			    datarow.fullsize = d.pictures[0].fpath
+			    datarow.greenhouse = value.camlocation
+			    datarow.location = value.camlabel
+			    datarow.zone = "pos " + d.poslabel
+			    datarow.time = d.pictures[0].ts
+			    datarow.warnings = d.pictures[0].numwarnings
+			    this.cameraImagery.push(datarow)
+			}
 		    })
 		}
 		     )
@@ -221,16 +224,11 @@ export default {
 	    this.activeItem = value.activeItem
 	    this.uuid = value.uuid
 	    this.fetchData()
-	    //console.log("Date changed", this.selectedDate)
 	},
 	changeWidget(value) {
 	    console.log("Item changed", value)
-	    //if ( value == 'barchart' ) {
-	    //this.fetchData()
-	    //}
 	},
 	fetchData() {
-	    //console.log(this.selectedDate)
 	    let params = {}
 	    params.ts_from = moment(this.selectedDate.start).unix()
 	    params.ts_to = moment(this.selectedDate.end).unix()
@@ -239,11 +237,12 @@ export default {
 	    if ( this.uuid ) {
 		params.suuid = this.uuid
 	    }
-	    //console.log(params)
 	    this.$axios.get(this.$backendhost+'stats', { params: params })
 		.then(request => {
 		    this.diseasedZones = request.data.diseased_zones
-		    console.log('Data', request.data)
+		    var lockey = Object.keys(request.data.locdimensions)[0]
+		    this.dimX = request.data.locdimensions[lockey].x
+		    this.dimY = request.data.locdimensions[lockey].y
 		}
 		     )
 		.catch(request => console.log(request))

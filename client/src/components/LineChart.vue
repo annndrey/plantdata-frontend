@@ -250,47 +250,8 @@ export default {
 			.duration(300)
 			.style("opacity", lineOpacity)
 		    selectedText.attr("color", textColor)
-		    // Update whether or not the elements are active
-		    //selectedLine.active = active
 		})
 
-	    
-	    //var textlegend = svg.append("g")
-	    //	.append("text")
-	    ///	.attr("class", "textlegend")
-	//	.attr("x", "50%")
-	//	.attr("y", "5%")
-	//	.attr("dominant-baseline", "middle")
-	//	.attr("text-anchor", "middle")
-	//	.data(colors)
-	//	.enter()
-	//	.each((d,i) => {
-	//	    var textdata = datakeys[i-1]
-	//	    if (textdata) {
-	//		var text = select(".textlegend")
-	//		var tspan = text.append("tspan")
-	//		let [sens, prb] = textdata.split(" ")
-	//		tspan.text(" " + sens + " Probe #" + this.probedata[prb] + " ")
-	//		tspan.attr('font-size', '0.8em')
-	//		tspan.attr('fill', colors[i-1])
-	//		tspan.attr("id", "text" + colors[i-1])
-	//		//show/hide onclick
-	//		    .on("click", function(){
-	//			var lineid = "#line"+colors[i-1]
-	//			var textid = "#text"+colors[i-1]
-	//			var selectedLine = select(lineid)
-	//			var selectedText = select(textid)
-	//			var lineOpacity = selectedLine.style("opacity") == 0 ? 1 : 0
-	//			var textColor = selectedText.attr("fill") == colors[i-1] ? "lightgrey" : colors[i-1] 
-	//			select(lineid)
-	//			    .transition()
-	//			    .duration(300)
-	//			    .style("opacity", lineOpacity)
-	//			selectedText.attr("fill", textColor)
-	//			// Update whether or not the elements are active
-	//			//selectedLine.active = active
-	//		    })
-	//	    }})
 	    var zoom = d3.zoom()
 		.scaleExtent([1, 30])
 		.translateExtent([[0, 0], [this.svgWidth, this.svgHeight]])
