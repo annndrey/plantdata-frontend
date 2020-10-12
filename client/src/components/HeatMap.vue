@@ -1,6 +1,6 @@
 <template>
 <div id="heatmap-container" class="svg-heatmap-container mt-4" align="center">
-  <svg id="heatmap-chart" v-if="redrawToggle === true" :width="svgWidth" :height="svgHeight">
+  <svg id="heatmap-chart" v-if="redrawToggle === true" :width="svgWidth+100" :height="svgHeight+100">
   </svg>
 </div>
 </template>
@@ -18,17 +18,19 @@ export default {
 	title: String,
 	xKey: String,
 	yKey: String,
-	data: Array
+	data: Array,
+	dimX: Number,
+	dimY: Number
     },
     watch: { 
       	data: function(newVal, oldVal) { 
-	    this.svgWidth = document.getElementById("heatmap-container").offsetWidth 
+	    //this.svgWidth = document.getElementById("heatmap-container").offsetWidth/2 + 100
 	    this.drawPlot()
         }
     },
     mounted() {
-	this.svgWidth = document.getElementById("heatmap-container").offsetWidth
-	console.log("heatmap", this.svgWidth)
+	this.svgWidth = document.getElementById("heatmap-container").offsetWidth/2
+	//console.log("heatmap", this.data)
 	this.drawPlot()
     },
     data: () => ({
@@ -39,24 +41,47 @@ export default {
 	drawPlot() {
 	    select("#heatmap-chart").selectAll("*").remove()
 	    select(".heatmapGroup").remove()
-	    var colors = [ '#e0f7d2', '#fa5061' ]
-
-	    console.log("HM DATA", this.data)
 	    
+	    var colors = ['#e0f7d2', '#fa5061']
 	    var colorDomain = extent(this.data, function(d){
 		return d.numwarnings
 	    })
+	    
+	    var plotGroups = Array.from({length:this.dimX},(v,k)=>k)
+	    var plotVars = Array.from({length:this.dimY},(v,k)=>k)
+	    
+	    var plotValues = []
+	    // fill the greenhouse area 
+	    plotGroups.forEach(function (pg, pi) {
+		plotVars.forEach(function (pv, vi) {
+		    var crd = {"x": pg, "y":pv}
+		    plotValues.push(crd)
+		})
+	    })
+		
+	    var x = scaleBand()
+		.range([ 0, this.svgWidth ])
+		.domain(plotGroups)
+	    .padding(0.01) // <-- remove rect borders
 
+	    var y = scaleBand()
+		.range([ this.svgHeight, 0 ])
+		.domain(plotVars)
+	    .padding(0.01)
+	    
 	    var colorScale = scaleLinear()
 		.domain(colorDomain)
 		.range(colors)
 	    
+	    var add_width = this.svgWidth + 100
+	    var add_height = this.svgWidth + 100
 	    var svg = select("#heatmap-chart")
-	    	.attr("width", this.svgWidth)
-		.attr("height", this.svgHeight)
+	    	.attr("width", add_width)
+		.attr("height", add_height)
 		.append("g")
 		.attr("class", "heatmapGroup")
-		.attr("transform", "translate(" + this.svgWidth*0.35 + ",0)")
+	    //.attr("transform", "translate(" + this.svgWidth*0.35 + ",0)")
+	    
 	    // legend
 
 	    var grad = svg.append('defs')
@@ -75,52 +100,104 @@ export default {
 		.attr('offset', function(d,i){
 		    return 100 * (i / (colors.length - 1)) + '%';
 		})
+
+	    var rectGroup = svg.append("g")
+	    	//.attr("transform", "translate(10,0)")
+		.attr("class", "rectGroup")
+
+	    rectGroup.selectAll()
+		.data(plotValues)
+		.enter()
+		.append("rect")
+		.attr("x", function(d) { return x(d.x) })
+		.attr("y", function(d) { return y(d.y) })
+		.attr("width", x.bandwidth() )
+		.attr("height", y.bandwidth() )
+		.style("fill", "#6eb2b5")
 	    
-	    var rect_g = svg.selectAll("rect")
-		.data(this.data)
+
+	    var camera_circle = rectGroup.selectAll()
+	    	.data(this.data)
 		.enter()
 		.append("g")
 
-	    rect_g.append("rect")
-		.attr("class", "rect-heatmap")
-		.attr("x", d => {
-		    return d.x * this.svgWidth*0.29/this.data.length
+	    var radialGradient = camera_circle.append("defs")
+		.append("radialGradient")
+		.attr("id", (d,i) => {
+		    console.log("radial-gradient"+i)
+		    return "radial-gradient"+i
 		})
-		.attr("y", d => {
-		    return d.y * this.svgHeight*0.7/this.data.length			
-		})
-		.attr("width", this.svgWidth*0.28/this.data.length)
-		.attr("height", this.svgHeight*0.7)
-		.style("fill", d => {
+	    radialGradient.append("stop")
+		.attr("offset", "0%")
+		.attr("stop-opacity", "0.7")
+		.attr("stop-color", d => {
 		    return colorScale(d.numwarnings); 
+		})
+	    
+	    radialGradient.append("stop")
+		.attr("offset", "100%")
+		.attr("stop-opacity", ".1")
+	    	.attr("stop-color", d => {
+		    return colorScale(d.numwarnings); 
+		})
+		//.attr("stop-color", "#6eb2b5");
+	    // big circles
+	    camera_circle.append("circle")
+		.attr("r", d => {
+		    return d.numwarnings*1.3
+		})
+		.attr("cx", d => {
+		    return x(d.x) + x.bandwidth()/2
+		})
+		.attr("cy", d => {
+		    return y(d.y) + y.bandwidth()/2
+		})
+	    	//.style("opacity", 0.5)
+		.style("fill", (d, i) => {
+		    return "url(#radial-gradient"+i+")"
 		})
 	    	.on("click", val => {
 		    this.$emit('camIdChanged', val)
 		})
 
-	    rect_g.append("text") 
-		.text(d => {
+	    
+	    camera_circle.append("circle")
+		.attr("r", 10)
+		.attr("cx", d => {
+		    return x(d.x) + x.bandwidth()/2
+		})
+		.attr("cy", d => {
+		    return y(d.y) + y.bandwidth()/2
+		})
+		.style("stroke", "gray")
+		.style("fill", d => {
+		    return colorScale(d.numwarnings)
+		})
+	    
+	    camera_circle.append("text")
+	    	.text(d => {
 		    return d.camlabel
 		})
 		.style("font-size", "10px")
 		.attr("transform", (d, i) => {
-		    let dx = d.x * this.svgWidth*0.29/this.data.length + 3
-		    let dy = 76
+		    let dx = x(d.x) + x.bandwidth() / 3.2
+		    let dy = y(d.y) + y.bandwidth() /1.5
 		    return "translate(" + dx + "," + dy + ")"
-		    
 		})
 	    
 
 	    
 	    var legend = svg.append('g')
-
-	    let legend_x = this.svgWidth*0.075
+		.attr("class", "cam-legend")
+    		.attr("transform", "translate(0,120)")
+	    
+	    let legend_x = this.svgWidth*0.05
 	    let legend_y = this.svgHeight * 0.8 
 	    
 	    legend.append("rect")
 		.attr('x', legend_x)
 		.attr('y', legend_y)
-		.attr('width', 150)
+		.attr('width', this.svgWidth*0.9)
 		.attr('height', 10)
 		.style('fill', 'url(#grad)');
 
@@ -128,19 +205,19 @@ export default {
 		//.attr("class", "legendText")
 		.attr("text-anchor", "end")
 		.attr("y",  legend_y + 10)
-		.attr("x", legend_x*3.1)
+		.attr("x", this.svgWidth*0.995)
 		.text(colorDomain[1])
 	    
 	    legend.append("text")
 		//.attr("class", "legendText")
 		//.attr("text-anchor", "end")
 		.attr("y",  legend_y + 10)
-		.attr("x", legend_x*0.7)
+		.attr("x", this.svgWidth*0.01)
 		.text(colorDomain[0])
 	    
 	    legend.append("text")
 	    	.attr("y",  legend_y + 20)
-		.attr("x", legend_x*1.1)
+		.attr("x", this.svgWidth*0.4)
 	    	.style("font-size", "10px")
 		.text("Number of diseased zones")
 	},
@@ -172,7 +249,7 @@ export default {
 		.domain([this.dataMin > 0 ? 0 : this.dataMin, this.dataMax]);
 	},
 	svgHeight() {
-	    return this.svgWidth *0.1/// 1.61803398875; // golden ratio
+	    return this.svgWidth
 	}
     }
 };
