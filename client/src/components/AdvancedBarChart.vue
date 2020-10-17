@@ -131,6 +131,21 @@ export default {
 			.attr("class", "bar-positive green")
 		    this.$emit('barDateChanged', val)
 		})
+
+	    var legend = svg.append('g')
+		.attr("class", "bar-legend")
+    		.attr("transform", "translate(0,60)")
+	    
+	    let legend_x = this.svgWidth*0.05
+	    let legend_y = this.svgHeight * 0.8 
+
+	    legend.append("text")
+	    	.attr("y",  legend_y + 20)
+		.attr("x", this.svgWidth*0.4)
+	    	.style("font-size", "10px")
+		.text("Number of diseased zones per day")
+	    
+
 	    
 	    selectAll(".bar-positive")
 		.data(this.data)
@@ -153,7 +168,7 @@ export default {
 		})
 		.style("fill", d => {
 		    let height = this.svgHeight - this.yScale(d[this.yKey])
-		    if (height == 0) {
+		    if (d[this.yKey] == 0) {
 			console.log("Fill", "transparent")
 			return "transparent"
 		    }

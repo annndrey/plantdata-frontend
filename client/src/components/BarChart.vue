@@ -89,7 +89,11 @@ export default {
 		    return this.yScale(d[this.yKey]);
 		})
 		.attr("height", d => {
-		    return this.svgHeight - this.yScale(d[this.yKey]);
+		    var hght = 1
+		    if (d[this.yKey] > 0) {
+			hght = this.svgHeight - this.yScale(d[this.yKey])
+		    }
+		    return hght
 		})
 	    
 	    select(".barGroup").append("text")

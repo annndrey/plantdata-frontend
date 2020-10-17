@@ -30,9 +30,9 @@
 		  <p class="card-text">
 		    <BarChart v-if="diseasedZones" title="Bar Chart" xKey="name" yKey="amount" :data="diseasedZones"/>
 		  </p>
-		  <h6 class="card-title">Diseased zones discovered</h6>
+		  <h6 class="card-title">Amount of diseased zones</h6>
 
-		  <router-link class="btn btn-primary" :to="'/images/' + activeItem">Details [AI Images]</router-link>
+		  <router-link class="btn btn-primary" :to="'/images/' + activeItem">All images</router-link>
 		  
 		</div>
 	      </div>
@@ -42,9 +42,9 @@
 		  <p class="card-text">
 		    <CircleChart v-if="spikes" :amount="spikes"/>
 		  </p>
-		  <h6 class="card-title">Unusual spikes of Sensors Data</h6>
+		  <h6 class="card-title">Climatic Data Overrun</h6>
 
-		  <router-link class="btn btn-primary" :to="'/sensors/' + activeItem">Details [Sensors]</router-link>
+		  <router-link class="btn btn-primary" :to="'/sensors/' + activeItem">All climate data</router-link>
 		</div>
 	      </div>
 	      

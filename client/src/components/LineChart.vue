@@ -233,7 +233,17 @@ export default {
 		    let textdata = datakeys[i]
 		    console.log("textdata", textdata)
 		    let [sens, prb] = textdata.split(" ")
-		    let button_text = " " + sens + " Probe #" + localprobedata[prb] + " "
+		    let fixedSens = "Sens"
+		    
+		    if (sens.startsWith("T")) {
+			fixedSens = "Temp"
+		    } else if (sens.startsWith("H")) {
+			fixedSens = "Humid"
+		    } else if (sens.startsWith("C")) {
+			fixedSens = "CO2"
+		    }
+			
+		    let button_text = " " + fixedSens + " mod. #" + localprobedata[prb] + " "
 		    return button_text
 
 		})
@@ -244,12 +254,14 @@ export default {
 		    var selectedLine = select(lineid)
 		    var selectedText = select(textid)
 		    var lineOpacity = selectedLine.style("opacity") == 0 ? 1 : 0
-		    var textColor = selectedText.attr("color") == colors[i] ? "lightgrey" : colors[i] 
+		    var textColor = selectedText.style("color") == colors[i] ? "lightgrey" : colors[i]
+
+		    console.log("textcolor", textColor)
 		    select(lineid)
 			.transition()
 			.duration(300)
 			.style("opacity", lineOpacity)
-		    selectedText.attr("color", textColor)
+		    selectedText.style("color", textColor)
 		})
 
 	    var zoom = d3.zoom()

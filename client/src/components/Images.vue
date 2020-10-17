@@ -4,7 +4,7 @@
 
       <div class="row">
 	<div class="col-md-12">
-	  <h5>Diseased Product AI Recognition</h5>
+	  <h5>AI Disease Recognition Overview</h5>
 	</div>
       </div>
       
@@ -39,20 +39,20 @@
 	      <form>
 		<div class="form-group">
 		  <label for="formControlRange">
-		    <span v-if="barplotDate" >Images from {{barplotDate.name | moment_date_filter}} </span>
-		    <span v-if="camerasTimeRange"> {{camerasTimeRange | moment_time_filter}}<span>
+		    <span v-if="barplotDate" >Images collection time selector</span>
+		    <span v-if="camerasTimeRange"> <small> showing images for {{barplotDate.name | moment_date_filter}} {{camerasTimeRange | moment_time_filter}}</small><span>
 		  </label>
 		  <input type="range" v-model="heatmapIndex" min="0" :max="heatmapCount-1" @change="changeHeatmapZone" class="form-control-range" id="formControlRange">
 		</div>
 	      </form>
 
-	      Greenhouse plan with diseased zones highlighted (select zone to show zone pictures)
+	      <span v-if="camerasTimeRange">Greenhouse layout with camera pictures <small class="text-muted">click on camera to see collected pictures</small><span>
 	      
 	      <HeatMap v-if="currentHeatmapZone" title="HeatMap" xKey="name" yKey="amount" :data="currentHeatmapZone" :dimX="dimX" :dimY="dimY"  @camIdChanged="updateCamID"/>
 	    </div>
 	  </div>
 	  
-	  <div class="row"
+	  <div class="row" v-if="camerasTimeRange">
 	    <div class="col-md-12">
 	      <small>
 		<table class="table table-hover">

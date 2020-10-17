@@ -1,16 +1,26 @@
 <template>
   
 <div id="dens-container" class="svg-dens-container" align="center">
-  <span  :class="{greytext: par != selectedSensor}" v-for="(par, ind) in allSensors" :key="par" @click="modifySensorsList(par, $event)"> {{par}} </span>
+  <span  :class="{greytext: par != selectedSensor}" v-for="(par, ind) in allSensors" :key="par" @click="modifySensorsList(par, $event)"> {{par | fixParameterName}} </span>
   <form v-if="datesIndices">
     <div class="form-group">
-      <label for="formControlRange"> {{dates[datesIndex]}} {{plotMax}} {{localMax}}</label>
+      <label for="formControlRange"> Data collection time selector <small>showing data for {{dates[datesIndex]}}</small></label>
       <input type="range" v-model="datesIndex" min="0" :max="datesIndices.length-1" @change="AnimateLoad" class="form-control-range" id="formControlRange">
     </div>
   </form>
+  <div class="row">
+    <div class="col-md-12">
+
+      <span>Spatial distribution of collected climatic data<span>
+    </div>
+  </div>
+  <div class="row mt-2">
+    <div class="col-md-12">
+      <svg id="dens-chart" v-if="redrawToggle === true" :width="svgWidth" :height="svgHeight+200">
+      </svg>
+    </div>
+  </div>
   
-  <svg id="dens-chart" v-if="redrawToggle === true" :width="svgWidth" :height="svgHeight+100">
-  </svg>
 </div>
 </template>
 
@@ -36,6 +46,18 @@ export default {
 	probescoords: Object,
 	parmax: Object,
 	svgWidth: Number
+    },
+    filters: {
+	fixParameterName: function (value) {
+	    let parNum = value.charAt(value.length-1)
+	    if (value.startsWith("T")) {
+		return "Temp #" + parNum
+	    } else if (value.startsWith("C")) {
+		return "CO2 #" + parNum
+	    } else if (value.startsWith("H")) {
+		return "Humid # " + parNum
+	    }
+	}
     },
     watch: { 
       	data: function(newVal, oldVal) { // watch it
@@ -73,16 +95,16 @@ export default {
 	changeDate() {
 	    // create plot
 	    console.log("Redraw 3D for", this.dates[this.datesIndex])
-	    console.log("this.data", this.data)
 	    this.plotData = []
 	    this.origData = []
 	    this.plotMax = 0
 	    var dataKeys = Object.keys(this.data.data)
 	    var lockey = Object.keys(this.data.locdimensions)[0]
+	    
 	    this.dimX = this.data.locdimensions[lockey].x
 	    this.dimY = this.data.locdimensions[lockey].y
 
-	    // add some zero values
+	    // add some initial values
 	    var xcoords = [0, this.dimX, this.dimX, 0]
 	    var ycoords = [0, this.dimY, 0, this.dimY]
 	    var target = [0, 0, 0, 0]
@@ -105,10 +127,14 @@ export default {
 		    this.origData.push(orig_data)
 		}
 	    })
+	    //var average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length
+	    //var realValues = target.slice(4, target.length)
 	    
-	    this.plotMin = 0 //min(this.plotData.map(d => {return d.val}))
+	    //var plotMean = average(realValues)
+	    //target.splice(0, 4, plotMean, plotMean, plotMean, plotMean)
+	    this.plotMin = 0//min(target)
 	    this.plotMax = this.parmax[paramKey]
-	    
+	    //console.log("MIN MAX", this.plotMin)
 	    // Kriging can be replaced with
 	    // bspline https://www.npmjs.com/package/b-spline
 	    
@@ -118,22 +144,23 @@ export default {
 	    console.log("MODEL", target, xcoords, ycoords, this.origData)
 	    
 	    var variogram = kriging.train(target, xcoords, ycoords, model, sigma2, alpha)
-
+	    
 	    for (var xindex = 0; xindex < this.dimX; xindex++) {
 		for (var yindex = 0; yindex < this.dimY; yindex++) {
 		    var xnew = xindex
 		    var ynew = yindex
 		    //console.log("X", xnew, "Y", ynew)
 		    var tpredicted = kriging.predict(xnew, ynew, variogram)
-		    //console.log("Pred", tpredicted)
-		    
+
+		    if (!tpredicted) {
+			tpredicted = this.plotMin
+		    }
 		    if (tpredicted < this.plotMin) {
 			tpredicted = this.plotMin
 		    }
 		    if (tpredicted > this.plotMax) {
 			tpredicted = this.plotMax
 		    }
-		    
 		    var pldata = {'x': xnew, 'y': ynew, 'val': tpredicted}
 		    //console.log(pldata)
 		    this.plotData.push(pldata)
@@ -141,10 +168,6 @@ export default {
 	    }
 	    
 	    this.localMax = Math.max(...this.plotData.map(d => {return d.val}))
-	    //console.log(Math.max(this.plotData.map(d => {return d.val})), 
-		//	max(this.plotData.map(d => {return d.val}))
-		//       )
-	    //this.AnimateLoad()
 
 	},
 	fillSensors() {
@@ -197,7 +220,7 @@ export default {
 		var filled_values = all_probe_values_list.map((d,i) => {
 		    return lin_interp(i)
 		})
-		console.log("filled_values", filled_values)					      
+		//console.log("filled_values", filled_values)					      
 		this.fulldata[k] = filled_values//all_probe_values_list
 		// create empty probevalue list of all labels length
 		// iterate over prlabels
@@ -221,14 +244,14 @@ export default {
 		.range([ this.svgHeight, 0 ])
 		.domain(plotVars)
 	    //.padding(0.01)
-	    
+	    var colors = ["#163a5f", "#45eba5"]
 	    var plotColor = scaleLinear()
-		.range(["#163a5f", "#45eba5"])
+		.range(colors)
 		.domain([this.plotMin, this.plotMax ])
 	    
 	    var svg = select("#dens-chart")
 	    	.attr("width", this.svgWidth)
-		.attr("height", this.svgHeight)
+		.attr("height", this.svgHeight + 200)
 	    
 	    var densGroup = svg.append("g")
 	    	//.attr("transform", "translate(10,0)")
@@ -261,16 +284,75 @@ export default {
 
 	    orig_circle.append("text")
 	    	.text(d => {
-		    return d.probe
+		    console.log("TEXT", d)
+		    return d.probe 
 		})
 	    	.style("font-size", "10px")
 		.style("fill", "#21aba5")
 	    	.attr("transform", (d, i) => {
-		    let dx = x(d.x) + x.bandwidth() / 3.2
-		    let dy = y(d.y) + y.bandwidth() /1.5
+		    let dx = x(d.x) + x.bandwidth() / 3.1
+		    let dy = y(d.y) + y.bandwidth() /1.3
 		    return "translate(" + dx + "," + dy + ")"
 		    
 		})
+
+	    orig_circle.append("text")
+	    	.text(d => {
+		    return d.val.toFixed(2)
+		})
+	    	.style("font-size", "10px")
+		.style("fill", "#fff")
+	    	.attr("transform", (d, i) => {
+		    let dx = x(d.x) + x.bandwidth() / 0.7
+		    let dy = y(d.y) + y.bandwidth() /1.3
+		    return "translate(" + dx + "," + dy + ")"
+		    
+		})
+	    var grad = svg.append('defs')
+		.append('linearGradient')
+		.attr('id', 'grad')
+		.attr('x1', '0%')
+		.attr('x2', '100%')
+		.attr('y1', '0%')
+		.attr('y2', '0%');
+
+	    //var colors = ['#e0f7d2', '#fa5061']
+
+	    grad.selectAll('stop')
+		.data(colors)
+		.enter()
+		.append('stop')
+		.style('stop-color', function(d){ return d; })
+		.attr('offset', function(d,i){
+		    return 100 * (i / (colors.length - 1)) + '%';
+		})
+
+	    var legend = svg.append('g')
+		.attr("class", "sens-legend")
+    		.attr("transform", "translate(0,120)")
+	    
+	    let legend_x = this.svgWidth*0.05
+	    let legend_y = this.svgHeight * 0.8 
+	    
+	    legend.append("rect")
+		.attr('x', legend_x+ 10)
+		.attr('y', legend_y)
+		.attr('width', this.svgWidth*0.8)
+		.attr('height', 10)
+		.style('fill', 'url(#grad)');
+
+	    legend.append("text")
+		.attr("text-anchor", "end")
+		.attr("y",  legend_y + 10)
+		.attr("x", this.svgWidth*0.995)
+		.text(this.plotMax.toFixed(2))
+	    
+	    legend.append("text")
+		.attr("class", "legendText")
+		.attr("text-anchor", "end")
+		.attr("y",  legend_y + 10)
+		.attr("x", this.svgWidth*0.04)
+		.text(this.plotMin)
 
 
 	},

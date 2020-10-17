@@ -16,6 +16,7 @@ import Vue2Filters from 'vue2-filters'
 import _ from 'lodash'
 
 var VueCookie = require('vue-cookie');
+var linearInterpolator = require('linear-interpolator')
 
 Vue.use(window.VueCharts)
 Vue.use(VCalendar)
@@ -33,7 +34,7 @@ Vue.use(require('vue-moment'), {
 })
 Vue.use(VueFlashMessage, { timeout: 2000 });
 Vue.use(VueCookie);
-
+Vue.use(linearInterpolator);
 
 new Vue({
     el: '#app',

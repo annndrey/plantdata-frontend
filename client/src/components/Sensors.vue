@@ -4,7 +4,7 @@
 
       <div class="row">
 	<div class="col-md-12">
-	  <h5>Sensors Data Tracking</h5>
+	  <h5>Climatic Data Overview</h5>
 	</div>
       </div>
       
@@ -31,7 +31,7 @@
 	  <div class="row">
 	    <div class="col-md-12 mt-2">
 	      <button type="button" class="btn btn-outline-primary btn-sm ml-1" style="background-color: transparent important!;"v-for="(val, ind) in probes" :key="val" @click="modifyData(ind, $event)">
-		Probe #{{val}}
+		Sensor Module #{{val}}
 	      </button>
 	    </div>
 	  </div>
@@ -247,8 +247,9 @@ export default {
       background-color: white;
       border-radius: 30px;
   }
-  .greytext {
-      color: lightgray;
+  .btn.btn-outline-primary.btn-sm.ml-1.greytext {
+      color: lightgrey;
+      
   }
   .btn-outline-primary {
       border-color: transparent;

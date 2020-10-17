@@ -173,7 +173,10 @@ export default {
 		.style("fill", d => {
 		    return colorScale(d.numwarnings)
 		})
-	    
+	    	.on("click", val => {
+		    this.$emit('camIdChanged', val)
+		})
+
 	    camera_circle.append("text")
 	    	.text(d => {
 		    return d.camlabel
