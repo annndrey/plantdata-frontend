@@ -51,11 +51,11 @@ export default {
 	fixParameterName: function (value) {
 	    let parNum = value.charAt(value.length-1)
 	    if (value.startsWith("T")) {
-		return "Temp #" + parNum
+		return "Temp"// #" + parNum
 	    } else if (value.startsWith("C")) {
-		return "CO2 #" + parNum
+		return "CO2"// #" + parNum
 	    } else if (value.startsWith("H")) {
-		return "Humid # " + parNum
+		return "Humid"// # " + parNum
 	    }
 	}
     },
@@ -127,21 +127,21 @@ export default {
 		    this.origData.push(orig_data)
 		}
 	    })
-	    //var average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length
-	    //var realValues = target.slice(4, target.length)
+	    var average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length
+	    var realValues = target.slice(4, target.length)
 	    
-	    //var plotMean = average(realValues)
-	    //target.splice(0, 4, plotMean, plotMean, plotMean, plotMean)
-	    this.plotMin = 0//min(target)
-	    this.plotMax = this.parmax[paramKey]
+	    var plotMean = average(realValues)
+	    target.splice(0, 4, plotMean, plotMean, plotMean, plotMean)
+	    this.plotMin = Math.min(...realValues)
+	    this.plotMax = this.parmax[paramKey]//Math.max(...realValues)//this.parmax[paramKey]
 	    //console.log("MIN MAX", this.plotMin)
 	    // Kriging can be replaced with
 	    // bspline https://www.npmjs.com/package/b-spline
 	    
-	    var model = "exponential"
+	    var model = "gaussian"//"exponential"
 	    var sigma2 = 0, alpha = 100
 	    
-	    console.log("MODEL", target, xcoords, ycoords, this.origData)
+	    //console.log("MODEL", target, xcoords, ycoords, this.origData)
 	    
 	    var variogram = kriging.train(target, xcoords, ycoords, model, sigma2, alpha)
 	    
@@ -152,15 +152,15 @@ export default {
 		    //console.log("X", xnew, "Y", ynew)
 		    var tpredicted = kriging.predict(xnew, ynew, variogram)
 
-		    if (!tpredicted) {
-			tpredicted = this.plotMin
-		    }
-		    if (tpredicted < this.plotMin) {
-			tpredicted = this.plotMin
-		    }
-		    if (tpredicted > this.plotMax) {
-			tpredicted = this.plotMax
-		    }
+		    //if (!tpredicted) {
+		//	tpredicted = this.plotMin
+		  //  }
+		    //if (tpredicted < this.plotMin) {
+		//	tpredicted = this.plotMin
+		  //  }
+		    //if (tpredicted > this.plotMax) {
+		//	tpredicted = this.plotMax
+		  //  }
 		    var pldata = {'x': xnew, 'y': ynew, 'val': tpredicted}
 		    //console.log(pldata)
 		    this.plotData.push(pldata)
@@ -245,9 +245,16 @@ export default {
 		.domain(plotVars)
 	    //.padding(0.01)
 	    var colors = ["#163a5f", "#45eba5"]
+	    var localMin = Math.min(...this.plotData.map(d => {
+		return d.val
+	    }))
+	    var localMax = Math.max(...this.plotData.map(d => {
+		return d.val
+	    }))
+
 	    var plotColor = scaleLinear()
 		.range(colors)
-		.domain([this.plotMin, this.plotMax ])
+		.domain([localMin, localMax])
 	    
 	    var svg = select("#dens-chart")
 	    	.attr("width", this.svgWidth)
@@ -335,24 +342,24 @@ export default {
 	    let legend_y = this.svgHeight * 0.8 
 	    
 	    legend.append("rect")
-		.attr('x', legend_x+ 10)
+		.attr('x', legend_x+ 50)
 		.attr('y', legend_y)
-		.attr('width', this.svgWidth*0.8)
+		.attr('width', this.svgWidth*0.7)
 		.attr('height', 10)
 		.style('fill', 'url(#grad)');
 
 	    legend.append("text")
 		.attr("text-anchor", "end")
 		.attr("y",  legend_y + 10)
-		.attr("x", this.svgWidth*0.995)
-		.text(this.plotMax.toFixed(2))
+		.attr("x", this.svgWidth*0.95)
+		.text(localMax.toFixed(2))
 	    
 	    legend.append("text")
 		.attr("class", "legendText")
 		.attr("text-anchor", "end")
 		.attr("y",  legend_y + 10)
-		.attr("x", this.svgWidth*0.04)
-		.text(this.plotMin)
+		.attr("x", this.svgWidth*0.1)
+		.text(localMin.toFixed(2))
 
 
 	},
