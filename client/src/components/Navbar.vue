@@ -1,4 +1,5 @@
 <template>
+
   <nav class="navbar navbar-expand-sm fixed-top navbar-light border-bottom">
     <a class="navbar-brand" href="http://fermata.tech/" style="color: white;"><img src="@/assets/logo.svg" height="30px"></a>
 
@@ -10,6 +11,9 @@
       <ul class="navbar-nav mr-auto">
 	<li v-if="currentUser" class="nav-item" >
 	  <router-link @click.native="closeMenu($event)" class="btn btn-primary nav-link" :to="{ name: 'Stats' }"> Main Page </router-link>
+	</li>
+	<li v-if="currentUser" class="nav-item" >
+	  <router-link @click.native="closeMenu($event)" class="btn btn-primary nav-link" :to="{ name: 'Settings' }"> Settings </router-link>
 	</li>
 	<li v-if="currentUser" class="nav-item">
 	  <router-link @click.native="closeMenu($event)" class="btn btn-primary nav-link" to="/logout"> Logout </router-link>
@@ -30,7 +34,12 @@
 	  </svg>
 	</span>
       </span>
+      
     </div>
+    <div class="flashpool flash__wrapper">
+      <flash-message transition-name="fade"></flash-message>
+    </div>
+
   </nav>
 </template>
 <script>
@@ -52,5 +61,15 @@ export default {
 .navbar-text {
     font-size: 0.8em;
 }
+  .flashpool {
+      position:fixed;
+      top:80px;
+      right:20px;
+      z-index: 100;
+      max-height:400px;
+      width:260px;
+      -webkit-perspective:400px;
+      perspective:400px
+  }  
 
 </style>

@@ -4,7 +4,13 @@
 
       <div class="row">
 	<div class="col-md-12">
-	  <h5>Climatic Data Overview</h5>
+	  <h5>
+	    Climatic Data Overview
+	  </h5>
+	  <div class="spinner spinner-border text-success" role="status" v-if="loadingdata">
+	    <span class="sr-only">Loading...</span>
+	  </div>
+
 	</div>
       </div>
       
@@ -21,7 +27,7 @@
 	<div class="container">
 	  <div class="row">
 	    <div class="col-md-12">
-	      <widget-nav @activeItemChanged="changeWidget" parent="sensors"></widget-nav>
+	      <widget-nav @activeItemChanged="changeWidget" parent="sensors" :plotdata="plotData" :probedata="probes"></widget-nav>
 	    </div>
 	  </div>
 	</div>
@@ -29,9 +35,9 @@
 	<div class="container container-rounded" id="parent-svg-container">
 
 	  <div class="row">
-	    <div class="col-md-12 mt-2">
-	      <button type="button" class="btn btn-outline-primary btn-sm ml-1" style="background-color: transparent important!;"v-for="(val, ind) in probes" :key="val" @click="modifyData(ind, $event)">
-		Sensor Module #{{val}}
+	    <div class="col-md-12 mt-2" ref="sensorbuttons"  v-show="activeItem != 'flag'">
+	      <button type="button" class="btn btn-outline-primary btn-sm ml-1 sensorbutton" style="background-color: transparent important!;"v-for="(val, ind) in probes" :key="val" @click="modifyData(val, $event)">
+		Sensor Module #{{val}} row: {{probesCoords[ind].row}} col: {{probesCoords[ind].col}}
 	      </button>
 	    </div>
 	  </div>
@@ -44,7 +50,7 @@
 		  <div class="col-md-12" id="sensorbuttons">
 		  </div>
 		</div>
-		<LineChart title="Line Chart" xKey="name" yKey="amount" :data="plotData" :probedata="probes"/>
+		<LineChart title="Line Chart" xKey="name" yKey="amount" :data="plotData" :probedata="probes" :limits="sensorlimits"/>
 	      </span>
 
 	    </div>
@@ -55,13 +61,45 @@
 	      <span v-show="activeItem == '3d'">
 		<DensityChart title="Density Chart" :data="plotData" :probedata="probes" :probescoords="probesCoords" :parmax="parMax" :svgWidth="svgwidth"/>
 	      </span>
-	  
-	      <span v-show="activeItem == 'flag'">
-		table with warnings
-	      </span>
-
 	    </div>
 	  </div>
+
+	  <div class="row">
+	    <div class="col-md-12">
+	      <span v-show="activeItem == 'flag'">
+
+		<small>
+		  <table class="table table-hover mt-4">
+		    <thead>
+		      <tr>
+			<th scope="col"></th>
+			<th scope="col">Time</th>
+			<th scope="col">Label</th>
+			<th scope="col">Location</th>
+			<th scope="col">Position</th>
+			<th scope="col">Value</th>
+			<th scope="col">Limits, min, max</th>
+		      </tr>
+		    </thead>
+		    <tbody>
+		      <tr v-for="(ntf, index) in currentNotifications" :key="alert+index" class="fade show" v-bind:class="{ 'table-success': ntf.read, 'table-secondaty': ntf.archived }">
+			<td class="align-middle"><button type="button" class="btn btn-outline-success btn-sm" @click="markAsRead(ntf.id, index, $event)" >mark as {{ntf.read ? 'unread' : 'read'}}</button></td>
+			<td class="align-middle">{{ntf.json_data.ts | moment_time_filter }}</td>
+			<td class="align-middle">{{ntf.json_data.ptype.toUpperCase()}}</td>
+			<td class="align-middle">{{ntf.json_data.location}}</td>
+			<td class="align-middle">{{ntf.json_data.localcoords}}</td>
+			<td class="align-middle">{{ntf.json_data.value}}</td>
+			<td class="align-middle">{{ntf.json_data.min}}-{{ntf.json_data.max}}</td>
+		    </tbody>
+		  </table>
+		</small>
+		
+		
+	      </span>
+	    </div>
+	  </div>
+	  
+	  
 	</div>
 	
       </div>
@@ -80,11 +118,11 @@ import DensityChart from '@/components/DensityChart'
 export default {
     name: 'Sensors',
     props: ['id'],
-        components: {
-	    GreenhouseNav,
-	    WidgetNav,
-	    LineChart,
-	    DensityChart
+    components: {
+	GreenhouseNav,
+	WidgetNav,
+	LineChart,
+	DensityChart
     },
     data () {
 	return {
@@ -97,7 +135,10 @@ export default {
 	    probesCoords: null,
 	    svgwidth: null,
 	    parMax: null,
-	    error: ''
+	    error: '',
+	    sensorlimits: false,
+	    loadingdata: false,
+	    currentNotifications: null
 	}
     },
     computed: {
@@ -111,27 +152,77 @@ export default {
     watch: {
 	selectedDate (newDate, oldDate) {
 	    this.fetchData()
+	},
+	activeItem (newVal, oldVal) {
+	    console.log("activeItem", newVal)
+	    if (newVal == 'flag') {
+		console.log("Fetch warnings")
+		this.fetchNotifications()
+	    }
 	}
     },
+    filters: {
+	moment_datetime_filter: function(date) {
+	    let newdate = moment(date).utcOffset("+00:00").format("DD-MM-YY HH:mm")
+	    return newdate
+	},
+    },
     methods: {
-	modifyData(ind, event) {
+	markAsRead(notif_id, index, event) {
+	    let button_txt = event.target.innerHTML
+	    event.target.innerHTML == "mark as unread" ? event.target.innerHTML="mark as read" : event.target.innerHTML="mark as unread"
+	    
+	    let mark_as_read = false
+	    if (event.target.parentNode.parentNode.className == "fade show table-success") {
+		// read -> unread
+		event.target.parentNode.parentNode.className=""
+		
+	    } else {
+		event.target.parentNode.parentNode.className = "fade show table-success"
+		mark_as_read = true
+		//event.target.innerHTML = "mark as read"
+	    }
+	    //setTimeout(() => {
+		//this.currentNotifications.splice(index,1)
+	    var params = {'read': mark_as_read}
+	    this.$axios.patch(this.$backendhost+'alerts/'+notif_id, params)
+	    //.then(request => {
+	    //this.currentNotifications = request.data
+	    //})
+		.catch(request => {
+		    console.log(request)
+		})
+	    //}, 500)
+	    
+	},
+	fetchNotifications() {
+	    this.loadingdata = true
+	    this.$axios.get(this.$backendhost+'alerts')
+		.then(request => {
+		    this.currentNotifications = request.data
+		})
+		.catch(request => {
+		    console.log(request)
+		})
+	    this.loadingdata = false
+	},
+	modifyData(plabel, event) {
 	    event.target.classList.toggle('greytext')
-	    if (this.selectedProbes.includes(ind)) {
-		var index = this.selectedProbes.indexOf(ind)
+	    if (this.selectedProbes.includes(plabel)) {
+		var index = this.selectedProbes.indexOf(plabel)
 		this.selectedProbes.splice(index, 1)
 	    } else {
-		this.selectedProbes.push(ind)
+		this.selectedProbes.push(plabel)
 	    }
-	    
 	    var tempData = {...this.fullData}
 	    tempData.data = {}
 	    Object.keys(this.fullData.data).map( k => {
-		var probe = k.split(" ")[1]
+		//var probe = k.split(" ")[1]
+		var probe = k.split(" ")[3]
 		if (this.selectedProbes.includes(probe)) {
 		    tempData.data[k] = this.fullData.data[k]
 		}
 	    })
-	    
 	    this.plotData = tempData
 	},
 	findMax(data) {
@@ -140,7 +231,7 @@ export default {
 	    let paramsMax = {}
 	    
 	    Object.keys(data.data).map( k => {
-		let key = k.split(" ")[0]
+		let key = k.split(" ")[3]
 		if (!prnames.includes(key)) {
 		    prnames.push(key)
 		}
@@ -166,18 +257,29 @@ export default {
 	preformatData(data){
 	    let outdata = {}
 	    let indices = {}
-	    var prindex = 1
+	    //var prindex = 1
 	    this.selectedProbes = []
 	    let probes = Object.keys(data.data).map( (k, ind)  => {
-		let [sens, probe] = k.split(" ")
+		let [sens, probe, suid, plabel] = k.split(" ")
 		
 		if (!Object.keys(indices).includes(probe)) {
-		    indices[probe] = prindex
-		    prindex++
-		    this.selectedProbes.push(probe)
+		    indices[probe] = plabel//prindex
+		    //prindex++
+		    //this.selectedProbes.push(probe)
+		    this.selectedProbes.push(plabel)
 		}
 	    })
-	    this.probes = indices
+	    //let sensor_buttons = document.getElementsByClassName("sensorbutton")
+	    let btn_array = Array.from(this.$refs['sensorbuttons'].children)
+	    if (btn_array) {
+		btn_array.forEach( b => {
+		    b.classList.remove("greytext")
+		})
+	    }
+	    // sort dict by values
+	    let reversed_indices = Object.entries(indices).sort().reduce( (o,[k,v]) => (o[""+v]=""+k,o), {} )
+	    let fixed_indices = Object.entries(reversed_indices).sort().reduce( (o,[k,v]) => (o[""+v]=""+k,o), {} )
+	    this.probes = fixed_indices
 	},
 	changeWidget(value) {
 	    this.activeItem = value.activeItem
@@ -199,6 +301,16 @@ export default {
 	    }
 	    
 	    //get probes coords
+	    this.loadingdata = true
+	    
+	    this.$axios.get(this.$backendhost+'sensortypes')
+		.then(request => {
+		    this.sensorlimits = request.data
+		})
+		.catch(request => {
+		    console.log(request)
+		})
+
 	    
 	    this.$axios.get(this.$backendhost+'probes', { params: probeparams })
 		.then(request => {
@@ -208,6 +320,8 @@ export default {
 			coords.x = obj.x
 			coords.y = obj.y
 			coords.z = obj.z
+			coords.row = obj.row
+			coords.col = obj.col
 			this.probesCoords[obj.uuid] = coords
 		    })
 		})
@@ -216,16 +330,36 @@ export default {
 			.then(request1 => {
 			    this.plotData = request1.data.data
 			    this.fullData = {...this.plotData}
+			    /// Filter data based on previously selected sensors
+			    // If we filter data, we should modify the preformatData function to
+			    // consider already selected probes 
+			    //if (this.selectedProbes) {
+				//var tempData = {...this.fullData}
+				//tempData.data = {}
+				//Object.keys(this.fullData.data).map( k => {
+				//    //var probe = k.split(" ")[1]
+				//    var probe = k.split(" ")[3]
+				//    if (this.selectedProbes.includes(probe)) {
+				//	tempData.data[k] = this.fullData.data[k]
+				//    }
+				//})
+				//this.plotData = tempData
+			    //}
+			    
+			    console.log("PLOT DATA", this.plotData)
 			    this.preformatData(request1.data.data)
 			    this.findMax(request1.data.data)
+			    this.loadingdata = false
 			}
 			     )
-			.catch(request => console.log(request1))
+			.catch(request => {
+			    console.log(request)
+			    this.flashWarning("No data found", {timeout: 10000})
+			    this.loadingdata = false
+			})
 		})
 		.catch(request => console.log(request))
-	    
-	    //get data
-	    
+
 	}
     }
 }
@@ -263,5 +397,13 @@ export default {
       background-color: #1f6c39;
       color: white;
   }
-  
+  .spinner {
+      display: block;
+      position: fixed;
+      z-index: 1031; /* High z-index so it is on top of the page */
+      top: 50%;
+      right: 50%; /* or: left: 50%; */
+      margin-top: -..px; /* half of the elements height */
+      margin-right: -..px; /* half of the elements widht */
+  }  
 </style>

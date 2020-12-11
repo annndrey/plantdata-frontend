@@ -1,22 +1,22 @@
 <template>
   
 <div id="dens-container" class="svg-dens-container" align="center">
-  <span  :class="{greytext: par != selectedSensor}" v-for="(par, ind) in allSensors" :key="par" @click="modifySensorsList(par, $event)"> {{par | fixParameterName}} </span>
+  <span class="btn btn-sm sensorbtn ml-1 mt-3" :class="{greytext: par != selectedSensor}" v-for="(par, ind) in allSensors" :key="par" @click="modifySensorsList(par, $event)"> {{par | fixParameterName}}
+  </span>
   <form v-if="datesIndices">
-    <div class="form-group">
+    <div class="form-group mt-3">
       <label for="formControlRange"> Data collection time selector <small>showing data for {{dates[datesIndex]}}</small></label>
       <input type="range" v-model="datesIndex" min="0" :max="datesIndices.length-1" @change="AnimateLoad" class="form-control-range" id="formControlRange">
     </div>
   </form>
   <div class="row">
     <div class="col-md-12">
-
       <span>Spatial distribution of collected climatic data<span>
     </div>
   </div>
   <div class="row mt-2">
     <div class="col-md-12">
-      <svg id="dens-chart" v-if="redrawToggle === true" :width="svgWidth" :height="svgHeight+200">
+      <svg id="dens-chart" v-if="redrawToggle === true" :width="svgWidth+200" :height="svgHeight+200">
       </svg>
     </div>
   </div>
@@ -31,9 +31,11 @@ import { select, selectAll } from "d3-selection";
 import { transition } from "d3-transition";
 import { axisBottom, axisLeft, line, easeLinear } from 'd3';
 import moment from 'moment'
-//import Spline from 'cubic-spline'
+import Spline from 'cubic-spline'
 import kriging from '@sakitam-gis/kriging'
 var linearInterpolator = require('linear-interpolator')
+var kdtree = require('kd-tree-javascript')
+var TPS = require('thinplate')
 
 export default {
     name: "DensityChart",
@@ -51,11 +53,11 @@ export default {
 	fixParameterName: function (value) {
 	    let parNum = value.charAt(value.length-1)
 	    if (value.startsWith("T")) {
-		return "Temp"// #" + parNum
+		return "Temp, °C "// #" + parNum
 	    } else if (value.startsWith("C")) {
-		return "CO2"// #" + parNum
+		return "CO2, ppm"// #" + parNum
 	    } else if (value.startsWith("H")) {
-		return "Humid"// # " + parNum
+		return "Humid, %"// # " + parNum
 	    }
 	}
     },
@@ -68,7 +70,6 @@ export default {
         }
     },
     beforeUpdate() {
-	
     },
     data: () => ({
 	redrawToggle: true,
@@ -94,7 +95,7 @@ export default {
 	},
 	changeDate() {
 	    // create plot
-	    console.log("Redraw 3D for", this.dates[this.datesIndex])
+	    //console.log("Redraw 3D for", this.dates[this.datesIndex])
 	    this.plotData = []
 	    this.origData = []
 	    this.plotMax = 0
@@ -105,67 +106,152 @@ export default {
 	    this.dimY = this.data.locdimensions[lockey].y
 
 	    // add some initial values
-	    var xcoords = [0, this.dimX, this.dimX, 0]
-	    var ycoords = [0, this.dimY, 0, this.dimY]
-	    var target = [0, 0, 0, 0]
+	    // Fill all with 0
+	    var xcoords = []//0, this.dimX, this.dimX, 0]
+	    var ycoords = []//0, this.dimY, 0, this.dimY]
+	    var target = []//0, 0, 0, 0]
+
 	    var paramKey = this.selectedSensor
 	    
+	    var distance = function(a, b){
+		return Math.pow(a.x - b.x, 2) +  Math.pow(a.y - b.y, 2);
+	    }
+	    var points = []
+	    //var pnts2D = []
 	    dataKeys.map(k => {
 		var key_splitted = k.split(" ")
 		var k_paramKey = key_splitted[0]
 		var key = key_splitted[1]
+		var plabel_key = key_splitted[3]
 		if ( k_paramKey == paramKey ) {
-		    
-		    var pld = this.fulldata[paramKey + " " + key + " " + lockey][this.datesIndex]
+		    var fulldata_key = paramKey + " " + key + " " + lockey + " " + plabel_key
+
+		    var pld = this.fulldata[fulldata_key][this.datesIndex]
 		    var x = this.probescoords[key].x
 		    var y = this.probescoords[key].y
-		    
+		    points.push({"x":x, "y":y})
 		    target.push(pld)
+		    //pnts2D.push([x, y])
 		    xcoords.push(x)
 		    ycoords.push(y)
 		    var orig_data = {'x': x, 'y': y, 'val': pld, 'probe': this.probedata[key]}
 		    this.origData.push(orig_data)
 		}
 	    })
+	    
+	    //var tree = new kdtree.kdTree(points, distance, ["x", "y"])
+
+	    //xcoords.forEach((val, ind) => {
+		//if (ind <= 3) {
+		//    var nearest = tree.nearest({"x":xcoords[ind], "y":ycoords[ind]}, 2)
+		//    var val0 = target[points.indexOf(nearest[0][0])+4]
+		//    if (nearest[1]) {
+		//	var val1 = target[points.indexOf(nearest[1][0])+4]
+		//    } else {
+		//	var val1 = target[points.indexOf(nearest[0][0])+4]
+		//    }
+		//    var val_mean = (val0+val1)/2
+		//    target[ind] = val_mean
+		//}
+	    //})
+	    //console.log(target)
+	    
+	    
 	    var average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length
-	    var realValues = target.slice(4, target.length)
+	    var realValues = target//.slice(4, target.length)
 	    
 	    var plotMean = average(realValues)
-	    target.splice(0, 4, plotMean, plotMean, plotMean, plotMean)
-	    this.plotMin = Math.min(...realValues)
-	    this.plotMax = this.parmax[paramKey]//Math.max(...realValues)//this.parmax[paramKey]
+	    //target.splice(0, 4, plotMean, plotMean, plotMean, plotMean)
+	    this.plotMin = Math.min(...realValues) 
+	    this.plotMax = Math.max(...realValues) //this.parmax[paramKey]  //Math.max(...realValues)//this.parmax[paramKey]
 	    //console.log("MIN MAX", this.plotMin)
 	    // Kriging can be replaced with
 	    // bspline https://www.npmjs.com/package/b-spline
+	    //console.time("Time this");
+	    //var tps2D = new TPS()
 	    
-	    var model = "gaussian"//"exponential"
-	    var sigma2 = 0, alpha = 100
+	    //console.log("tps2d", tps2D.getValue([0,0]))
+	    var model = "spherical"//"gaussian"//"spherical"//"exponential"
+	    // default -> var sigma2 = 1, alpha = 10000
+	    var sigma2 = 0, alpha = 0.1
+	    //var radius = 6
 	    
 	    //console.log("MODEL", target, xcoords, ycoords, this.origData)
+	    //var nearpoints = []
+	    
+	    //this.origData.forEach( d => {
+		//console.log("CENTER", d.x, d.y)
+		/// 
+		//for (var x = d.x - radius ; x <= d.x; x++)
+		//{
+		 //   for (var y = d.y - radius ; y <= d.y; y++)
+		  //  {
+		//	// we don't have to take the square root, it's slow
+		//	if ((x - d.x)*(x - d.x) + (y - d.y)*(y - d.y) <= radius*radius) 
+		//	{
+		//	    let xSym = d.x - (x - d.x);
+		//	    let ySym = d.y - (y - d.y);
+		//	    nearpoints = nearpoints.concat([[d.x, d.y], [x, y], [x, ySym], [xSym , y], [xSym, ySym]])
+		//	}
+		 //   }
+		//}
+		///
+	    //})
 	    
 	    var variogram = kriging.train(target, xcoords, ycoords, model, sigma2, alpha)
-	    
+	    let allpoints = []
 	    for (var xindex = 0; xindex < this.dimX; xindex++) {
-		for (var yindex = 0; yindex < this.dimY; yindex++) {
-		    var xnew = xindex
-		    var ynew = yindex
-		    //console.log("X", xnew, "Y", ynew)
-		    var tpredicted = kriging.predict(xnew, ynew, variogram)
-
-		    //if (!tpredicted) {
-		//	tpredicted = this.plotMin
-		  //  }
-		    //if (tpredicted < this.plotMin) {
-		//	tpredicted = this.plotMin
-		  //  }
-		    //if (tpredicted > this.plotMax) {
-		//	tpredicted = this.plotMax
-		  //  }
-		    var pldata = {'x': xnew, 'y': ynew, 'val': tpredicted}
-		    //console.log(pldata)
-		    this.plotData.push(pldata)
+	    	for (var yindex = 0; yindex < this.dimY; yindex++) {
+		    allpoints.push([xindex, yindex])
 		}
 	    }
+	    //nearpoints = nearpoints.map(d => {
+		//return JSON.stringify(d)
+	    //})
+	    //console.log("TPS", TPS, pnts2D, target)
+	   // var allpredicted = null
+	    //console.log(tps2D.compile(pnts2D, target, function(err) {
+	//	if(err){
+	//	    console.error(err);
+	//	    return
+	//	}
+	//	console.log('worked!');
+	//	tps2D.getValues(allpoints, function (err, result) {
+	//	    if (err) {
+	//		console.error(err);
+	//		return;
+	//	    }
+	//	    allpredicted = result
+	//	})
+	  //  }))
+	    
+	    //console.(allpredicted)
+
+	    allpoints.forEach( pt => {
+		var xnew = pt[0]//xindex
+		var ynew = pt[1]//yindex
+		//var tpredicted = this.plotMin-1
+		//if ( nearpoints.includes(JSON.stringify(pt)) ) {
+		//console.log("X", xnew, "Y", ynew)
+		var  tpredicted = kriging.predict(xnew, ynew, variogram)
+		//console.log([xnew, ynew])
+		//var tpredicted = tps2D.getValue([xnew, ynew])
+		//} 
+		    
+	//if (!tpredicted) {
+		//	tpredicted = this.plotMin
+	//	//  }
+	//	//if (tpredicted < this.plotMin) {
+	//	//    tpredicted = this.plotMin
+	//	//}
+	//	//if (tpredicted > this.plotMax) {
+	//	//     tpredicted = this.plotMax
+	//	// }
+		var pldata = {'x': xnew, 'y': ynew, 'val': tpredicted}
+		//console.log(pldata)
+		this.plotData.push(pldata)
+	    })
+	    //}
 	    
 	    this.localMax = Math.max(...this.plotData.map(d => {return d.val}))
 
@@ -186,7 +272,7 @@ export default {
 	    //
 	    this.dates = []
 	    this.data.labels.map( d =>{
-		let datalabel = moment(d).locale('en').format('HH:mm')
+		let datalabel = moment(d).locale('en').format('DD/MM HH:mm')
 		this.dates.push(datalabel)
 	    })
 	    this.datesIndices = Array.from({length:this.dates.length},(v,k)=>k)
@@ -207,7 +293,7 @@ export default {
 		})
 
 		// TODO: >>> Fill null values somehow
-		console.log("empty all_probe_values_list", all_probe_values_list)
+		//console.log("empty all_probe_values_list", all_probe_values_list)
 
 		var non_null_values = all_probe_values_list.reduce(function(res, d){
 		    if (d != null) {
@@ -215,10 +301,19 @@ export default {
 		    }
 		    return res
 		}, [])
-		console.log("non null values", non_null_values)
+		//console.log("non null values", non_null_values)
+		//var average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length
 		var lin_interp = linearInterpolator(non_null_values)
 		var filled_values = all_probe_values_list.map((d,i) => {
-		    return lin_interp(i)
+		    let interp_value = lin_interp(i)
+		    let return_value = null
+		    
+		    if (!interp_value) {
+			return_value = non_null_values[0][1]
+		    } else {
+			return_value = interp_value
+		    }
+		    return return_value
 		})
 		//console.log("filled_values", filled_values)					      
 		this.fulldata[k] = filled_values//all_probe_values_list
@@ -244,7 +339,7 @@ export default {
 		.range([ this.svgHeight, 0 ])
 		.domain(plotVars)
 	    //.padding(0.01)
-	    var colors = ["#163a5f", "#45eba5"]
+	    var colors =  ["#163a5f", "#45eba5"]
 	    var localMin = Math.min(...this.plotData.map(d => {
 		return d.val
 	    }))
@@ -252,12 +347,15 @@ export default {
 		return d.val
 	    }))
 
+	    //localMin = this.plotMin// - 0.05*this.plotMin//localMin
+	    //localMax = this.plotMax// + 0.05*this.plotMax//localMax
+	    
 	    var plotColor = scaleLinear()
 		.range(colors)
 		.domain([localMin, localMax])
 	    
 	    var svg = select("#dens-chart")
-	    	.attr("width", this.svgWidth)
+	    	.attr("width", this.svgWidth+200)
 		.attr("height", this.svgHeight + 200)
 	    
 	    var densGroup = svg.append("g")
@@ -291,8 +389,8 @@ export default {
 
 	    orig_circle.append("text")
 	    	.text(d => {
-		    console.log("TEXT", d)
-		    return d.probe 
+		    //console.log("TEXT", d)
+		    return d.probe
 		})
 	    	.style("font-size", "10px")
 		.style("fill", "#21aba5")
@@ -319,8 +417,8 @@ export default {
 		.append('linearGradient')
 		.attr('id', 'grad')
 		.attr('x1', '0%')
-		.attr('x2', '100%')
-		.attr('y1', '0%')
+		.attr('x2', '0%')
+		.attr('y1', '100%')
 		.attr('y2', '0%');
 
 	    //var colors = ['#e0f7d2', '#fa5061']
@@ -333,33 +431,36 @@ export default {
 		.attr('offset', function(d,i){
 		    return 100 * (i / (colors.length - 1)) + '%';
 		})
-
-	    var legend = svg.append('g')
-		.attr("class", "sens-legend")
-    		.attr("transform", "translate(0,120)")
+	    if ( Math.abs(localMin) != Math.abs(localMax) ) {
+		var legend = svg.append('g')
+		    .attr("class", "sens-legend")
+    		    .attr("transform", "translate(" + this.svgWidth*0.91 + ",-" + this.svgWidth*0.65 + ")")
+		
+		let legend_x = this.svgWidth*0.05
+		let legend_y = this.svgHeight * 0.8 
+		
+		legend.append("rect")
+		    .attr('x', legend_x+ 50)
+		    .attr('y', legend_y)
+		//.attr('width', this.svgWidth*0.7)
+		//.attr('height', 10)
+		    .attr('width', 10)
+		    .attr('height', this.svgHeight*0.7)
+		    .style('fill', 'url(#grad)');
+	
+		legend.append("text")
+		    .attr("text-anchor", "end")
+		    .attr("y",  legend_y + legend_y*0.92)
+		    .attr("x", this.svgWidth*0.19)
+		    .text(localMin.toFixed(2))
 	    
-	    let legend_x = this.svgWidth*0.05
-	    let legend_y = this.svgHeight * 0.8 
-	    
-	    legend.append("rect")
-		.attr('x', legend_x+ 50)
-		.attr('y', legend_y)
-		.attr('width', this.svgWidth*0.7)
-		.attr('height', 10)
-		.style('fill', 'url(#grad)');
-
-	    legend.append("text")
-		.attr("text-anchor", "end")
-		.attr("y",  legend_y + 10)
-		.attr("x", this.svgWidth*0.95)
-		.text(localMax.toFixed(2))
-	    
-	    legend.append("text")
-		.attr("class", "legendText")
-		.attr("text-anchor", "end")
-		.attr("y",  legend_y + 10)
-		.attr("x", this.svgWidth*0.1)
-		.text(localMin.toFixed(2))
+		legend.append("text")
+		    .attr("class", "legendText")
+		    .attr("text-anchor", "end")
+		    .attr("y",  legend_y - 10)
+		    .attr("x", this.svgWidth*0.19)
+		    .text(localMax.toFixed(2))
+	    }
 
 
 	},
@@ -483,5 +584,14 @@ export default {
   .greytext {
       color: lightgray;
   }
-      
+  .sensorbtn {
+  font-size: x-small;
+  background-color: #f6f7f9;
+  border-radius: 13px;
+  }  
+  .sensorbtn:hover {
+   background-color: #1f6c39;
+   color: white;
+  }
+    
 </style>

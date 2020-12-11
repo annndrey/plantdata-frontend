@@ -6,6 +6,7 @@ import Images from '@/components/Images'
 import Greenhouse from '@/components/Greenhouse'
 import Login from '@/components/Login'
 import Logout from '@/components/Logout'
+import Settings from '@/components/Settings'
 
 Vue.use(Router)
 
@@ -28,6 +29,11 @@ export default new Router({
 	    name: 'Sensors',
 	    component: Sensors,
 	    props: true
+	},
+	{
+	    path: '/settings',
+	    name: 'Settings',
+	    component: Settings
 	},
 	{
 	    path: '/images/:id',

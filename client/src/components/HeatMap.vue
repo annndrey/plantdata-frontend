@@ -30,7 +30,7 @@ export default {
     },
     mounted() {
 	this.svgWidth = document.getElementById("heatmap-container").offsetWidth/2
-	//console.log("heatmap", this.data)
+	console.log("heatmap", this.data)
 	this.drawPlot()
     },
     data: () => ({
@@ -88,8 +88,8 @@ export default {
 		.append('linearGradient')
 		.attr('id', 'grad')
 		.attr('x1', '0%')
-		.attr('x2', '100%')
-		.attr('y1', '0%')
+		.attr('x2', '0%')
+		.attr('y1', '100%')
 		.attr('y2', '0%');
 	    
 	    grad.selectAll('stop')
@@ -127,6 +127,7 @@ export default {
 		    console.log("radial-gradient"+i)
 		    return "radial-gradient"+i
 		})
+	    
 	    radialGradient.append("stop")
 		.attr("offset", "0%")
 		.attr("stop-opacity", "0.7")
@@ -144,7 +145,8 @@ export default {
 	    // big circles
 	    camera_circle.append("circle")
 		.attr("r", d => {
-		    return d.numwarnings*1.3
+		    return 10
+		    //return d.numwarnings*1.3
 		})
 		.attr("cx", d => {
 		    return x(d.x) + x.bandwidth()/2
@@ -183,7 +185,7 @@ export default {
 		})
 		.style("font-size", "10px")
 		.attr("transform", (d, i) => {
-		    let dx = x(d.x) + x.bandwidth() / 3.2
+		    let dx = x(d.x) + x.bandwidth() / 0.8
 		    let dy = y(d.y) + y.bandwidth() /1.5
 		    return "translate(" + dx + "," + dy + ")"
 		})
@@ -192,37 +194,39 @@ export default {
 	    
 	    var legend = svg.append('g')
 		.attr("class", "cam-legend")
-    		.attr("transform", "translate(0,120)")
+    	    //.attr("transform", "translate(0,120)")
+		.attr("transform", "translate(" + this.svgWidth*0.25 + ", " + this.svgWidth*0.06 + ")")
 	    
-	    let legend_x = this.svgWidth*0.05
-	    let legend_y = this.svgHeight * 0.8 
+	    let legend_y = this.svgWidth*0.05
+	    let legend_x = this.svgHeight * 0.8 
 	    
-	    legend.append("rect")
-		.attr('x', legend_x)
-		.attr('y', legend_y)
-		.attr('width', this.svgWidth*0.9)
-		.attr('height', 10)
-		.style('fill', 'url(#grad)');
-
-	    legend.append("text")
-		//.attr("class", "legendText")
-		.attr("text-anchor", "end")
-		.attr("y",  legend_y + 10)
-		.attr("x", this.svgWidth*0.995)
-		.text(colorDomain[1])
-	    
-	    legend.append("text")
-		//.attr("class", "legendText")
-		//.attr("text-anchor", "end")
-		.attr("y",  legend_y + 10)
-		.attr("x", this.svgWidth*0.01)
-		.text(colorDomain[0])
-	    
-	    legend.append("text")
-	    	.attr("y",  legend_y + 20)
-		.attr("x", this.svgWidth*0.4)
-	    	.style("font-size", "10px")
-		.text("Number of diseased zones")
+	    //legend.append("rect")
+	//	.attr('x', legend_x)
+	//	.attr('y', legend_y)
+	//	.attr('width', this.svgWidth*0.01)
+	//	.attr('height', this.svgHeight * 0.8)
+	//	.style('fill', 'url(#grad)');
+//
+//	    legend.append("text")
+//		//.attr("class", "legendText")
+//		.attr("text-anchor", "end")
+//		.attr("y",  legend_y*0.7)
+//		.attr("x", legend_x+legend_x*0.05)
+//		.text(colorDomain[1])
+//	    
+//	    legend.append("text")
+//		//.attr("class", "legendText")
+//		//.attr("text-anchor", "end")
+//		.attr("y",  this.svgHeight*0.885)
+//		.attr("x", legend_x-legend_x*0.04)
+//		.text(colorDomain[0])
+//	    
+//	    legend.append("text")
+//	    	.attr("y",  -this.svgWidth*0.83)
+//		.attr("x", this.svgWidth*0.3)
+//	    	.style("font-size", "10px")
+//		.attr("transform", "rotate(90)")
+//		.text("Number of diseased zones")
 	},
     },
     computed: {

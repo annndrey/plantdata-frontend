@@ -69,7 +69,7 @@
 		  <tbody>
 		    <tr v-for="(row, index) in cameraImagery" :key="modal+index">
 		      <td class="align-middle">
-			<a href="#" data-toggle="modal" :data-target="'#imageModal'+index">
+			<a href="#" data-toggle="modal" :data-target="'#imageModal'+index" @click="updateCanvasInfo(index, row.results)">
 			  <img class="table-image" :src="row.imagery">
 			</a>
 			
@@ -77,7 +77,10 @@
 			  <div class="modal-dialog modal-dialog-centered modal-lg">
 			    <div class="modal-content">
 			      <div class="modal-body">
-				<img class="modal-image" :src="row.fullsize">
+				<div class="canvas-wrapper">
+				  <img :ref="'image'+index" :id="'image'+index" class="modal-image" v-lazy="row.fullsize"  alt="…" >
+				  <canvas :ref="'canvas'+index" :id="'canvas'+index" class="canvas-overlay"></canvas>
+				</div>
 			      </div>
 			      <div class="modal-footer">
 				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -135,14 +138,24 @@ export default {
 	    cameraImagery: null,
 	    camerasTimeRange: null,
 	    dimX: null,
-	    dimY: null
-	    
+	    dimY: null,
+	    currentInd: null,
+	    currentRes: null
 	}
     },
     computed: {
 	...mapGetters({ currentUser: 'currentUser', selectedDate: 'selectedDate'})
     },    
     created () {
+    },
+    mounted () {
+	//this.$nextTick(() => {
+	this.$Lazyload.$on('loaded', this.redrawCanvas)
+	//})
+    },
+    beforeDestroy(){
+	//this.$Lazyload.$on('loaded', null)
+	//console.log('destroy', this.$refs)
     },
     updated () {
     },
@@ -162,9 +175,84 @@ export default {
 
     },
     methods: {
+	updateCanvasInfo(ind, res) {
+	    this.currentInd = ind
+	    this.currentRes = res
+	},
+	redrawCanvas(event) {
+	    //this.$nextTick(() => {
+	    this.$nextTick(() => {
+		this.drawCanvas(this.currentInd, this.currentRes)
+	    })
+	    //  })
+	},
+	drawCanvas(ind, res) {
+	    this.$nextTick(() => {
+		
+		//console.log("Canvas", ind, this.$Lazyload)
+		//console.log(res)
+		//console.log("IMG2", this.$refs)
+		//let c = document.getElementById('canvas'+ind)
+		//let img = document.getElementById('image'+ind)
+		let c = this.$refs['canvas'+ind][0]
+		let img = this.$refs['image'+ind][0]
+		//console.log("IMG0", img.naturalWidth)
+		//console.log("IMG1", img.width)
+		//console.log("IMG3", imag)
+		//console.log("IMG4", cnv)
+		//console.log("IMG", img.naturalWidth, img.naturalHeight)
+		c.width = img.naturalWidth
+		c.height = img.naturalHeight
+		//console.log("WH", c.width, c.height)
+		
+		var ctx = c.getContext("2d")
+		ctx.clearRect(0,0,c.width,c.height)
+		ctx.lineWidth = 4
+		ctx.font = "italic 30pt Arial";
+		ctx.textBaseline="top"
+		
+		res.forEach(function(coords, index) {
+		    let region = coords.region
+		    let results = coords.result
+		    let textres = []
+		    let regioncolor = "#4CB066"
+		    if ( results.State == "unhealthy" ) {
+			regioncolor = "#F05648"
+		    }
+		    ctx.strokeStyle = regioncolor
+		    ctx.fillStyle = regioncolor		
+		    // rect 
+		    ctx.beginPath()
+		    ctx.rect(region[0]+6, region[1]-6, region[2]-region[0]-6, region[3]-region[1]-6)
+		    ctx.stroke()
+		    //results text
+		    if (results.Object) {
+			textres.push(results.Object)
+                    }
+                    //if (results.State) {
+			//textres.push(results.State)
+                    //}
+                    if (results.Diagnosis) {
+			if (results.Diagnosis != "unknown") {
+                            textres.push(results.Diagnosis)
+			}
+                    }
+		    //text background
+		    ctx.globalAlpha = 0.3
+		    ctx.fillRect(region[0], region[1], region[2]-region[0], 35)
+		    ctx.globalAlpha = 1
+		    ctx.fillStyle = "white"
+		    
+		    ctx.fillText(textres.join(", "), region[0]+10, region[1])
+		    ctx.fillStyle = regioncolor		
+		    
+		})
+	    })
+	},
 	updateCamID(value) {
 	    this.currentCamID = value.camid
 	    this.cameraImagery = null
+	    console.log("cameras", this.currentCamID)
 	    this.$axios.get(this.$backendhost+'cameras/' + this.currentCamID)
 		.then(request => {
 		    this.cameraImagery = []
@@ -178,6 +266,7 @@ export default {
 			    datarow.zone = "pos " + d.poslabel
 			    datarow.time = d.pictures[0].ts
 			    datarow.warnings = d.pictures[0].numwarnings
+			    datarow.results = JSON.parse(d.pictures[0].results)
 			    this.cameraImagery.push(datarow)
 			}
 		    })
@@ -187,7 +276,6 @@ export default {
 	    
 	},
 	updateBarplotDate(value) {
-	    console.log("Date changed", value.name, moment(value.name).unix())
 	    this.barplotDate = value
 	    let params = {}
 	    params.ts_from = moment(value.name).unix()
@@ -195,14 +283,12 @@ export default {
 	    if ( this.uuid ) {
 		params.suuid = this.uuid
 	    }
-	    console.log(params)
 	    this.$axios.get(this.$backendhost+'locationwarnings', { params: params })
 		.then(request => {
 		    this.heatmapZones = request.data
 		    this.heatmapIndex = 0
 		    this.heatmapCount = Object.keys(this.heatmapZones).length
 		    this.currentHeatmapZone = this.heatmapZones[Object.keys(this.heatmapZones)[this.heatmapIndex]]
-		    console.log("Heatmap zone0", this.heatmapCount, this.currentHeatmapZone)
 		    if (this.currentHeatmapZone) {
 			this.camerasTimeRange = this.currentHeatmapZone[0].ts
 		    }
@@ -214,7 +300,6 @@ export default {
 	},
 	changeHeatmapZone() {
 	    this.currentHeatmapZone = this.heatmapZones[Object.keys(this.heatmapZones)[this.heatmapIndex]]
-	    console.log("Heatmap zone1", this.currentHeatmapZone)
 	    if (this.currentHeatmapZone) {
 		this.camerasTimeRange = this.currentHeatmapZone[0].ts
 	    }
@@ -273,5 +358,18 @@ export default {
   }
   .modal-image {
       width: 100%;
+  }
+  .canvas-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      width: 100%;
+      height: 100%
+  }
+  .canvas-wrapper {
+    position: relative;
   }
 </style>

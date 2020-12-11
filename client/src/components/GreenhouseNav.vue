@@ -131,6 +131,7 @@ export default {
 	setData(what, request) {
 	    if (what == "sensors") {
 		this.sensors = request.data
+		console.log(this.sensors)
 	    } 	    
 	}
 	

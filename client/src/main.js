@@ -14,9 +14,13 @@ import 'hchs-vue-charts'
 import VCalendar from 'v-calendar';
 import Vue2Filters from 'vue2-filters'
 import _ from 'lodash'
+import VueLazyload from 'vue-lazyload'
+
 
 var VueCookie = require('vue-cookie');
 var linearInterpolator = require('linear-interpolator')
+var kdtree = require('kd-tree-javascript')
+var TPS = require('thinplate')
 
 Vue.use(window.VueCharts)
 Vue.use(VCalendar)
@@ -35,6 +39,9 @@ Vue.use(require('vue-moment'), {
 Vue.use(VueFlashMessage, { timeout: 2000 });
 Vue.use(VueCookie);
 Vue.use(linearInterpolator);
+Vue.use(kdtree);
+Vue.use(VueLazyload)
+Vue.use(TPS)
 
 new Vue({
     el: '#app',
