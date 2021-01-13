@@ -46,9 +46,9 @@
 		</div>
 	      </form>
 
-	      <span v-if="camerasTimeRange">Greenhouse layout with camera pictures <small class="text-muted">click on camera to see collected pictures</small><span>
+	      <span v-if="camerasTimeRange">Greenhouse layout with camera pictures<span>
 	      
-	      <HeatMap v-if="currentHeatmapZone" title="HeatMap" xKey="name" yKey="amount" :data="currentHeatmapZone" :dimX="dimX" :dimY="dimY"  @camIdChanged="updateCamID"/>
+	      <HeatMap v-if="currentHeatmapZone" title="HeatMap" xKey="name" yKey="amount" :data="currentHeatmapZone" :dimX="dimX" :dimY="dimY" :campositions="cameraImagery"/>  <!--@camIdChanged="updateCamID"/>-->
 	    </div>
 	  </div>
 	  
@@ -63,7 +63,8 @@
 		      <th scope="col">Location</th>
 		      <th scope="col">Position</th>
 		      <th scope="col">Time</th>
-		      <th scope="col">Zone reprated cases</th>
+		      <th scope="col">Detected zones</th>
+		      <th scope="col">Overall health</th>
 		    </tr>
 		  </thead>
 		  <tbody>
@@ -83,6 +84,7 @@
 				</div>
 			      </div>
 			      <div class="modal-footer">
+				<a target="_blank" rel="noopener noreferrer" class="btn btn-secondary" :href="row.fullsize" role="button">View fullsize</a>
 				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
 			      </div>
 			    </div>
@@ -91,9 +93,10 @@
 		      </td>
 		      <td class="align-middle">{{row.greenhouse}}</td>
 		      <td class="align-middle">{{row.location}}</td>
-		      <td class="align-middle">{{row.zone}}</td>
+		      <td class="align-middle">{{row.position}}</td>
 		      <td class="align-middle">{{row.time | moment_time_filter }}</td>
 		      <td class="align-middle">{{row.warnings}}</td>
+		      <td class="align-middle">{{row.health.toFixed(2)}}</td>
 		  </tbody>
 		</table>
 	      </small>
@@ -207,7 +210,7 @@ export default {
 		
 		var ctx = c.getContext("2d")
 		ctx.clearRect(0,0,c.width,c.height)
-		ctx.lineWidth = 4
+		ctx.lineWidth = 8
 		ctx.font = "italic 30pt Arial";
 		ctx.textBaseline="top"
 		
@@ -223,7 +226,7 @@ export default {
 		    ctx.fillStyle = regioncolor		
 		    // rect 
 		    ctx.beginPath()
-		    ctx.rect(region[0]+6, region[1]-6, region[2]-region[0]-6, region[3]-region[1]-6)
+		    ctx.rect(region[0]+8, region[1]-8, region[2]-region[0]-8, region[3]-region[1]-8)
 		    ctx.stroke()
 		    //results text
 		    if (results.Object) {
@@ -259,14 +262,21 @@ export default {
 		    request.data.positions.map(d => {
 			if (d.pictures[0]) {
 			    let datarow = {}
+			    let hlth = 0
+			    if (d.pictures[0].health) {
+				hlth = d.pictures[0].health == 100 ? d.pictures[0].health : d.pictures[0].health
+			    }
 			    datarow.imagery = d.pictures[0].preview
 			    datarow.fullsize = d.pictures[0].fpath
 			    datarow.greenhouse = value.camlocation
 			    datarow.location = value.camlabel
-			    datarow.zone = "pos " + d.poslabel
+			    datarow.position = d.poslabel
 			    datarow.time = d.pictures[0].ts
 			    datarow.warnings = d.pictures[0].numwarnings
 			    datarow.results = JSON.parse(d.pictures[0].results)
+			    datarow.health = hlth
+			    datarow.posx = d.x
+			    datarow.posy = d.y
 			    this.cameraImagery.push(datarow)
 			}
 		    })
@@ -283,6 +293,7 @@ export default {
 	    if ( this.uuid ) {
 		params.suuid = this.uuid
 	    }
+	    console.log("HTM UPD", params)
 	    this.$axios.get(this.$backendhost+'locationwarnings', { params: params })
 		.then(request => {
 		    this.heatmapZones = request.data
@@ -292,16 +303,19 @@ export default {
 		    if (this.currentHeatmapZone) {
 			this.camerasTimeRange = this.currentHeatmapZone[0].ts
 		    }
-		}
-		     )
-		.catch(request => console.log(request))
-
-
+		    console.log("Update cameras", this.currentHeatmapZone)
+		    // TODO: Fix for multiple cameras
+		    this.updateCamID(this.currentHeatmapZone[0])
+		})
+	    	.catch(request => console.log(request))
 	},
 	changeHeatmapZone() {
 	    this.currentHeatmapZone = this.heatmapZones[Object.keys(this.heatmapZones)[this.heatmapIndex]]
 	    if (this.currentHeatmapZone) {
+		// TODO: Fix for multiple cameras
 		this.camerasTimeRange = this.currentHeatmapZone[0].ts
+		// TODO: Fix for multiple cameras
+		this.updateCamID(this.currentHeatmapZone[0])
 	    }
 
 	},

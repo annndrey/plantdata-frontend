@@ -57,6 +57,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import XLSX from 'xlsx';
 export default {
     name: 'WidgetNav',
     props: {'parent': String,
@@ -91,7 +92,9 @@ export default {
     methods: {
 	exportData() {
 	    console.log("exportData")
-	    let csv = 'Sensor,Type,Date,Value\n'
+	    var json_data = []
+	    
+	    //let csv = 'Sensor,Type,Date,Value\n'
 	    
 	    for (const [key, value] of Object.entries(this.probedata)) {
 		//console.log(key, value)
@@ -102,9 +105,9 @@ export default {
 		for (const [lk, lv] of Object.entries(this.plotdata.probelabels)) {
 		    if (lk.startsWith(key)) {
 			datelabels = lv
+			
 		    }
 		}
-
 		for (const [dk, dv] of Object.entries(this.plotdata.data)) {
 		    let kparts = dk.split(" ")
 		    if (kparts[1].startsWith(key)) {
@@ -112,22 +115,29 @@ export default {
 			
 			//console.log(dk, dv)
 			dv.map((d,ind) => {
-			    let row = ["Sens. " + value, kparts[0], datelabels[ind], dv[ind]]
-			    //console.log("Sens. " + value, kparts[0], datelabels[ind], dv[ind] )
-			    csv += row.join(',')
-			    csv += "\n"
+			    let rowdate = datelabels[ind]
+			    if (rowdate) {
+				let row = {"Sensor": "Sensor " + value, "Type": kparts[0], "Date": rowdate, "Value": dv[ind]}
+				json_data.push(row)
+			    }
 			})
 		    }
 		}
-
-		
 	    }
-	    
-	    let anchor = document.createElement('a')
-	    anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)
-	    anchor.target = '_blank'
-	    anchor.download = 'exported_data.csv'
-	    anchor.click()
+	    const data = XLSX.utils.json_to_sheet(json_data)
+            const wb = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(wb, data, 'data')
+            XLSX.writeFile(wb, 'exported_data.xlsx')
+	    //xlsxWriter.insertSheet(xlsxSheet)
+	    //document.getElementById('fileExport').addEventListener('click', function () {            
+              //  xlsxWriter.saveFile(); // pop! ("Save As" dialog appears)
+            //})
+	    //console.log("writer", xlsxWriter)
+	    //let anchor = document.createElement('a')
+	    //anchor.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv)
+	    //anchor.target = '_blank'
+	    //anchor.download = 'exported_data.csv'
+	    //anchor.click()
 	},
 	showDate(date) {
 	    return this.$moment(date).format('DD/MM/YYYY')

@@ -16,8 +16,20 @@
   </div>
   <div class="row mt-2">
     <div class="col-md-12">
-      <svg id="dens-chart" v-if="redrawToggle === true" :width="svgWidth+200" :height="svgHeight+200">
-      </svg>
+      <div class="canvas-wrapper" :style="{height: svgHeight+ 'px'}">
+	
+	<div class="canvas-background">
+	  <canvas ref="heatmapCanvas" id="canvasContainer"  :width="svgWidth+200" :height="svgHeight+200">
+	  </canvas>
+	</div>
+	
+
+	<div class="svg-drawing">
+	  <svg id="dens-chart" v-if="redrawToggle === true" :width="svgWidth+200" :height="svgHeight+200">
+	  </svg>
+	</div>
+	
+      </div>
     </div>
   </div>
   
@@ -29,13 +41,14 @@ import { scaleLinear, scalePoint, scaleBand, scaleTime } from "d3-scale";
 import { max, min } from "d3-array";
 import { select, selectAll } from "d3-selection";
 import { transition } from "d3-transition";
-import { axisBottom, axisLeft, line, easeLinear } from 'd3';
+import { axisBottom, axisLeft, line, easeLinear, extent, contourDensity, geoPath, contours } from 'd3';
 import moment from 'moment'
 import Spline from 'cubic-spline'
 import kriging from '@sakitam-gis/kriging'
 var linearInterpolator = require('linear-interpolator')
 var kdtree = require('kd-tree-javascript')
-var TPS = require('thinplate')
+var simpleheat = require("simpleheat")
+//var TPS = require('thinplate')
 
 export default {
     name: "DensityChart",
@@ -46,7 +59,7 @@ export default {
 	data: Array,
 	probedata: Array,
 	probescoords: Object,
-	parmax: Object,
+	deviation: Object,
 	svgWidth: Number
     },
     filters: {
@@ -66,7 +79,8 @@ export default {
 	    this.fillDates()
 	    this.fillValues()
 	    this.fillSensors()
-   	    this.AnimateLoad()
+   	    //this.drawPlot()
+	    this.AnimateLoad()
         }
     },
     beforeUpdate() {
@@ -91,25 +105,26 @@ export default {
 	modifySensorsList(val, event) {
 	    event.target.classList.toggle('greytext')
 	    this.selectedSensor = val
+	    //this.drawPlot()
 	    this.AnimateLoad()
 	},
 	changeDate() {
 	    // create plot
 	    //console.log("Redraw 3D for", this.dates[this.datesIndex])
+	    var plot
 	    this.plotData = []
 	    this.origData = []
 	    this.plotMax = 0
 	    var dataKeys = Object.keys(this.data.data)
 	    var lockey = Object.keys(this.data.locdimensions)[0]
-	    
-	    this.dimX = this.data.locdimensions[lockey].x
-	    this.dimY = this.data.locdimensions[lockey].y
+	    this.dimX = this.data.locdimensions[lockey].x * 3
+	    this.dimY = this.data.locdimensions[lockey].y * 3
 
 	    // add some initial values
 	    // Fill all with 0
-	    var xcoords = []//0, this.dimX, this.dimX, 0]
-	    var ycoords = []//0, this.dimY, 0, this.dimY]
-	    var target = []//0, 0, 0, 0]
+	    var xcoords = [0, this.dimX, this.dimX, 0]
+	    var ycoords = [0, this.dimY, 0, this.dimY]
+	    var target = [0, 0, 0, 0]
 
 	    var paramKey = this.selectedSensor
 	    
@@ -117,7 +132,7 @@ export default {
 		return Math.pow(a.x - b.x, 2) +  Math.pow(a.y - b.y, 2);
 	    }
 	    var points = []
-	    //var pnts2D = []
+	    var pnts2D = []
 	    dataKeys.map(k => {
 		var key_splitted = k.split(" ")
 		var k_paramKey = key_splitted[0]
@@ -127,11 +142,11 @@ export default {
 		    var fulldata_key = paramKey + " " + key + " " + lockey + " " + plabel_key
 
 		    var pld = this.fulldata[fulldata_key][this.datesIndex]
-		    var x = this.probescoords[key].x
-		    var y = this.probescoords[key].y
+		    var x = this.probescoords[key].x * 3
+		    var y = this.probescoords[key].y * 3
 		    points.push({"x":x, "y":y})
 		    target.push(pld)
-		    //pnts2D.push([x, y])
+		    pnts2D.push({"x": x, "y": y, "z": pld})
 		    xcoords.push(x)
 		    ycoords.push(y)
 		    var orig_data = {'x': x, 'y': y, 'val': pld, 'probe': this.probedata[key]}
@@ -139,31 +154,33 @@ export default {
 		}
 	    })
 	    
-	    //var tree = new kdtree.kdTree(points, distance, ["x", "y"])
+	    var tree = new kdtree.kdTree(points, distance, ["x", "y"])
 
-	    //xcoords.forEach((val, ind) => {
-		//if (ind <= 3) {
-		//    var nearest = tree.nearest({"x":xcoords[ind], "y":ycoords[ind]}, 2)
-		//    var val0 = target[points.indexOf(nearest[0][0])+4]
-		//    if (nearest[1]) {
-		//	var val1 = target[points.indexOf(nearest[1][0])+4]
-		//    } else {
-		//	var val1 = target[points.indexOf(nearest[0][0])+4]
-		//    }
-		//    var val_mean = (val0+val1)/2
-		//    target[ind] = val_mean
-		//}
-	    //})
+	    xcoords.forEach((val, ind) => {
+		if (ind <= 3) {
+		    var nearest = tree.nearest({"x":xcoords[ind], "y":ycoords[ind]}, 2)
+		    var val0 = target[points.indexOf(nearest[0][0])+4]
+		    if (nearest[1]) {
+			var val1 = target[points.indexOf(nearest[1][0])+4]
+		    } else {
+			var val1 = target[points.indexOf(nearest[0][0])+4]
+		    }
+		    var val_mean = (val0+val1)/2
+		    target[ind] = val_mean
+		}
+	    })
 	    //console.log(target)
 	    
 	    
 	    var average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length
-	    var realValues = target//.slice(4, target.length)
+	    var realValues = target.slice(4, target.length)
 	    
 	    var plotMean = average(realValues)
 	    //target.splice(0, 4, plotMean, plotMean, plotMean, plotMean)
-	    this.plotMin = Math.min(...realValues) 
-	    this.plotMax = Math.max(...realValues) //this.parmax[paramKey]  //Math.max(...realValues)//this.parmax[paramKey]
+
+	    console.log("DENSPLOT", this.deviation[paramKey])
+	    this.plotMin = Math.min(...realValues)// - this.deviation[paramKey]
+	    this.plotMax = Math.max(...realValues)// + this.deviation[paramKey] //this.parmax[paramKey]  //Math.max(...realValues)//this.parmax[paramKey]
 	    //console.log("MIN MAX", this.plotMin)
 	    // Kriging can be replaced with
 	    // bspline https://www.npmjs.com/package/b-spline
@@ -171,32 +188,35 @@ export default {
 	    //var tps2D = new TPS()
 	    
 	    //console.log("tps2d", tps2D.getValue([0,0]))
-	    var model = "spherical"//"gaussian"//"spherical"//"exponential"
-	    // default -> var sigma2 = 1, alpha = 10000
-	    var sigma2 = 0, alpha = 0.1
-	    //var radius = 6
+	    var model = "exponential"//"gaussian"//"spherical"//"exponential"
+	    // default -> var sigma2 = 0, alpha = 10000
+	    //var sigma2 = 0.01, alpha = 10
+	    var sigma2 = 0, alpha = 100
+	    
+	    //var radius = 14
 	    
 	    //console.log("MODEL", target, xcoords, ycoords, this.origData)
-	    //var nearpoints = []
 	    
+	    // finding all nearpoints around original data
+	    //var nearpoints = []
 	    //this.origData.forEach( d => {
-		//console.log("CENTER", d.x, d.y)
-		/// 
-		//for (var x = d.x - radius ; x <= d.x; x++)
-		//{
-		 //   for (var y = d.y - radius ; y <= d.y; y++)
-		  //  {
-		//	// we don't have to take the square root, it's slow
-		//	if ((x - d.x)*(x - d.x) + (y - d.y)*(y - d.y) <= radius*radius) 
-		//	{
-		//	    let xSym = d.x - (x - d.x);
-		//	    let ySym = d.y - (y - d.y);
-		//	    nearpoints = nearpoints.concat([[d.x, d.y], [x, y], [x, ySym], [xSym , y], [xSym, ySym]])
-		//	}
-		 //   }
-		//}
-		///
-	    //})
+	//	console.log("CENTER", d.x, d.y)
+	//	/// 
+	//	for (var x = d.x - radius ; x <= d.x; x++)
+	//	{
+	//	    for (var y = d.y - radius ; y <= d.y; y++)
+	//	    {
+	//		// we don't have to take the square root, it's slow
+	//		if ((x - d.x)*(x - d.x) + (y - d.y)*(y - d.y) <= radius*radius) 
+	//		{
+	//		    let xSym = d.x - (x - d.x);
+	//		    let ySym = d.y - (y - d.y);
+	//		    nearpoints = nearpoints.concat([[d.x, d.y], [x, y], [x, ySym], [xSym , y], [xSym, ySym]])
+	//		}
+	//	    }
+	//	}
+	//	
+	  //  })
 	    
 	    var variogram = kriging.train(target, xcoords, ycoords, model, sigma2, alpha)
 	    let allpoints = []
@@ -206,10 +226,10 @@ export default {
 		}
 	    }
 	    //nearpoints = nearpoints.map(d => {
-		//return JSON.stringify(d)
-	    //})
+	//	return JSON.stringify(d)
+	  //  })
 	    //console.log("TPS", TPS, pnts2D, target)
-	   // var allpredicted = null
+	   //var allpredicted = null
 	    //console.log(tps2D.compile(pnts2D, target, function(err) {
 	//	if(err){
 	//	    console.error(err);
@@ -226,32 +246,33 @@ export default {
 	  //  }))
 	    
 	    //console.(allpredicted)
-
+	    
 	    allpoints.forEach( pt => {
 		var xnew = pt[0]//xindex
 		var ynew = pt[1]//yindex
+		//var tpredicted = this.interpolate({'x': xnew, 'y': ynew}, pnts2D)
 		//var tpredicted = this.plotMin-1
-		//if ( nearpoints.includes(JSON.stringify(pt)) ) {
-		//console.log("X", xnew, "Y", ynew)
-		var  tpredicted = kriging.predict(xnew, ynew, variogram)
-		//console.log([xnew, ynew])
-		//var tpredicted = tps2D.getValue([xnew, ynew])
-		//} 
+		// comparing if current point is included to the nearpoints array
+	//	if ( nearpoints.includes(JSON.stringify(pt)) ) {
+		    //console.log("X", xnew, "Y", ynew)
+		    var  tpredicted = kriging.predict(xnew, ynew, variogram)
+		    //console.log([xnew, ynew])
+		    //var tpredicted = tps2D.getValue([xnew, ynew])
+		    //} 
 		    
-	//if (!tpredicted) {
-		//	tpredicted = this.plotMin
-	//	//  }
-	//	//if (tpredicted < this.plotMin) {
-	//	//    tpredicted = this.plotMin
-	//	//}
-	//	//if (tpredicted > this.plotMax) {
-	//	//     tpredicted = this.plotMax
-	//	// }
-		var pldata = {'x': xnew, 'y': ynew, 'val': tpredicted}
-		//console.log(pldata)
-		this.plotData.push(pldata)
+		    //if (!tpredicted) {
+		    //	tpredicted = this.plotMin
+		    //	//  }
+		    //	//if (tpredicted < this.plotMin) {
+		    //	//    tpredicted = this.plotMin
+		    //	//}
+		    //	//if (tpredicted > this.plotMax) {
+		    //	//     tpredicted = this.plotMax
+		    //	// }
+		    var pldata = {'x': xnew, 'y': ynew, 'val': tpredicted}
+		    this.plotData.push(pldata)
+	//	}
 	    })
-	    //}
 	    
 	    this.localMax = Math.max(...this.plotData.map(d => {return d.val}))
 
@@ -324,12 +345,73 @@ export default {
 		//
 	    })
 	},
+	drawPlot(){
+	    this.changeDate()
+	    select("#dens-chart").selectAll("*").remove()
+	    var plotGroups = Array.from({length:this.dimX},(v,k)=>k)
+	    var plotVars = Array.from({length:this.dimY},(v,k)=>k)
+	    console.log("pl gr", plotGroups)
+	    
+	    var x = scaleLinear()
+		.range([ 0, this.svgWidth ])
+		.domain(extent(plotGroups))
+	    
+	    var y = scaleLinear()
+		.range([ this.svgHeight, 0 ])
+		.domain(extent(plotVars))
+	    
+	    var localMin = Math.min(...this.origData.map(d => {
+		return d.val
+	    })) - this.deviation[this.selectedSensor]
+	    var localMax = Math.max(...this.origData.map(d => {
+		return d.val
+	    })) + this.deviation[this.selectedSensor]
+
+	    var colors =  ["#163a5f", "#45eba5"]
+
+	    var color = scaleLinear()
+		.range(colors)
+		.domain([localMin, localMax])
+	    
+	    var densityData = contourDensity()
+		.x(function(d) { return x(d.x); })
+		.y(function(d) { return y(d.y); })
+		.size([this.svgWidth, this.svgHeight])
+		.bandwidth(20)
+	    (this.plotData)
+	    
+	    var svg = select("#dens-chart")
+	    	.attr("width", this.svgWidth+200)
+		.attr("height", this.svgHeight + 200)
+	    
+	    //var defs = svg.append("defs");
+	    
+	    var filter = svg.append("defs").append('filter')
+		.attr('id', 'blur')
+		.append("feGaussianBlur")
+		.attr("stdDeviation", 4);
+	    
+	    var densGroup = svg.append("g")
+	    	//.attr("transform", "translate(10,0)")
+		.attr("class", "densGroup")
+		//.attr("filter", "url(#blur)")
+
+	    //densGroup.selectAll("dot")
+	//	.data(this.plotData)
+	//	.enter()
+	//	.append("circle")
+	//	.style("opacity", 0.1)
+	  //  	.attr("cx", function (d) { return x(d.x); } )
+	//	.attr("cy", function (d) { return y(d.y); } )
+	//	.attr("r", function(d) { return 50})
+	//	.style("fill", function(d) { return color(d.val)})
+//
+	},
 	AnimateLoad() {
 	    this.changeDate()
 	    select("#dens-chart").selectAll("*").remove()
 	    var plotGroups = Array.from({length:this.dimX},(v,k)=>k)
 	    var plotVars = Array.from({length:this.dimY},(v,k)=>k)
-	    
 	    var x = scaleBand()
 		.range([ 0, this.svgWidth ])
 		.domain(plotGroups)
@@ -339,13 +421,14 @@ export default {
 		.range([ this.svgHeight, 0 ])
 		.domain(plotVars)
 	    //.padding(0.01)
+
 	    var colors =  ["#163a5f", "#45eba5"]
 	    var localMin = Math.min(...this.plotData.map(d => {
 		return d.val
-	    }))
+	    })) - this.deviation[this.selectedSensor]
 	    var localMax = Math.max(...this.plotData.map(d => {
 		return d.val
-	    }))
+	    })) + this.deviation[this.selectedSensor]
 
 	    //localMin = this.plotMin// - 0.05*this.plotMin//localMin
 	    //localMax = this.plotMax// + 0.05*this.plotMax//localMax
@@ -357,21 +440,195 @@ export default {
 	    var svg = select("#dens-chart")
 	    	.attr("width", this.svgWidth+200)
 		.attr("height", this.svgHeight + 200)
+
 	    
 	    var densGroup = svg.append("g")
 	    	//.attr("transform", "translate(10,0)")
 		.attr("class", "densGroup")
+	    	.attr("transform", "translate(30,0)")
+	    
+	    var canvas = this.$refs['heatmapCanvas']
+	    //var heat = simpleheat(canvas)
+	    //let heatdata = []
+	    //this.plotData.forEach( (d, i) => {
+		//heatdata.push([x(d.x)+x.bandwidth()/2, y(d.y)+y.bandwidth()/2, d.val])
+	    //})
 
+	    //heat.data(heatdata)
+	    //heat.max(this.plotMax+10)
+	    //heat.radius(14, 13)
+	   //heat.gradient({0.6: "#00E047",
+	//		   0.95: '#23E047',
+	//		   1.0: '#FFE047'
+	//		  })
+	    //heat.draw(0.5)
+
+	    localMin = Math.min(...this.origData.map(d => {
+		return d.val
+	    })) - this.deviation[this.selectedSensor]
+	    localMax = Math.max(...this.origData.map(d => {
+		return d.val
+	    })) + this.deviation[this.selectedSensor]
+
+	    // Smooth points
+	    var ctx = canvas.getContext("2d")
+	    ctx.clearRect(0,0, canvas.width, canvas.height)
+	    ctx.globalAlpha = 1
+	    //ctx.filter = 'blur(10px)'
+	    let pointradius = 6
+	    let maskradius = 70
+	    this.plotData.forEach( d => {
+		ctx.beginPath()
+		ctx.arc(x(d.x)+x.bandwidth()/2+30, y(d.y)+y.bandwidth()/2, pointradius, 0, 2 * Math.PI, false)
+		ctx.fillStyle =  plotColor(d.val)
+		ctx.fill()
+	    })
+	    // Subtraction Mask
+	    var maskCanvas = document.createElement('canvas')
+	    maskCanvas.width = canvas.width
+	    maskCanvas.height = canvas.height
+	    var maskCtx = maskCanvas.getContext('2d')
+	    maskCtx.fillStyle = "#BABABA"
+	    maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height)
+	    maskCtx.globalCompositeOperation = 'xor'
+	    
+	    maskCtx.beginPath()
+	    this.origData.forEach( d => {
+		maskCtx.moveTo(x(d.x)+x.bandwidth()/2+30, y(d.y)+y.bandwidth()/2)
+		maskCtx.arc(x(d.x)+x.bandwidth()/2+30, y(d.y)+y.bandwidth()/2, maskradius, 0, 2 * Math.PI)
+		//maskCtx.closePath()
+		
+	    })
+	    maskCtx.fill()
+	    //maskCtx.arc(30, 30, 10, 0, 2 * Math.PI)
+	    
+	    
+	    ctx.drawImage(maskCanvas, 0, 0)
+
+	    
+	    ctx.filter = "none"
+	    ctx.globalAlpha = 1
+	    ctx.fillStyle = "white";
+	    ctx.fillRect(0, 0, 30, this.svgHeight)
+	    ctx.fillStyle = "white";
+	    ctx.fillRect(this.svgWidth+30, 0, this.svgWidth+60, this.svgHeight)
+	    ctx.fillStyle = "white";
+	    ctx.fillRect(0, this.svgHeight, this.svgWidth+230, 30)
+	    
+	    //yaxis
+	    var ylabels = svg.append("g")
+		.attr("class", "axisLeft")
+	    	.attr("transform", "translate(30,10)")
+	    	.call(axisLeft(y)
+		      .tickSize(-this.svgWidth, 0, 0)
+		     )
+	    ylabels.selectAll(".tick line").attr("stroke", "lightgray").attr("stroke-dasharray", "1,3")
+
+	    ylabels.selectAll(".tick text")
+		.each(function (d,i) {
+		    this.innerHTML=d/3
+		    select(this)
+			.attr("opacity", function() {
+			    if (i % 3 == 0) {
+				return 1
+			    } else {
+				return 0
+			    }
+			})
+		})
+	    
+	    
+	    ylabels.selectAll(".tick line")
+		.each(function (d,i) {
+		    select(this)
+			.attr("opacity", function() {
+			    if (i > 2 & i % 3 == 0) {
+				return 1
+			    } else {
+				return 0
+			    }
+			})
+		})
+	    
+	      ylabels.selectAll(".tick")
+		.each(function (d,i) {
+		    select(this)
+			.attr("color", function() {
+			    if (i % 2 == 0) {
+				return "lightgray"
+			    } else {
+				return "gray"
+			    }
+			})
+		})
+
+
+	    var xlabels = svg.append("g")
+		.attr("class", "axisBottom")
+		.attr("transform", "translate(20," + this.svgHeight + ")")
+	    	.call(axisBottom(x)
+		      .tickSize(-this.svgWidth, 0, 0)
+		     )
+	    xlabels.selectAll(".tick line").attr("stroke", "lightgray").attr("stroke-dasharray", "1,3")
+	    xlabels.selectAll(".tick text")
+		.each(function (d,i) {
+		    this.innerHTML=d/3
+		    select(this)
+			.attr("opacity", function() {
+			    if (i > 2 & i % 3 == 0) {
+				return 1
+			    } else {
+				return 0
+			    }
+			})
+		})
+
+	    xlabels.selectAll(".tick line")
+		.each(function (d,i) {
+		    select(this)
+			.attr("opacity", function() {
+			    if (i > 2 & i % 3 == 0) {
+				return 1
+			    } else {
+				return 0
+			    }
+			})
+		})
+
+	    xlabels.selectAll(".tick")
+		.each(function (d,i) {
+		    select(this)
+			.attr("color", function() {
+			    if (i % 2 == 0) {
+				return "lightgray"
+			    } else {
+				return "gray"
+			    }
+			})
+		})
+
+	    
+	    
 	    // add interpolated data
-	    densGroup.selectAll()
-		.data(this.plotData)
-		.enter()
-		.append("rect")
-		.attr("x", function(d) { return x(d.x) })
-		.attr("y", function(d) { return y(d.y) })
-		.attr("width", x.bandwidth() )
-		.attr("height", y.bandwidth() )
-		.style("fill", function(d) { return plotColor(d.val)} )
+	    //densGroup.selectAll()
+		//.data(this.plotData)
+		//.enter()
+		//.append("rect")
+		//.attr("x", function(d) { return x(d.x) })
+		//.attr("y", function(d) { return y(d.y) })
+		//.attr("width", x.bandwidth() )
+		//.attr("height", y.bandwidth() )
+	    //.style("fill", function(d) { return plotColor(d.val)} )
+	    
+	    //densGroup.selectAll("dot")
+	//	.data(this.plotData)
+	//	.enter()
+	//	.append("circle")
+	//	.style("opacity", 1)
+	  //  	.attr("cx", function (d) { return x(d.x)  + x.bandwidth()/2 } )
+	//	.attr("cy", function (d) { return y(d.y)  + y.bandwidth()/2 } )
+	//	.attr("r", function(d) { return 3})
+	//	.style("fill", function(d) { return plotColor(d.val)})
 
 	    // add original data
 	   var orig_circle = densGroup.selectAll()
@@ -440,7 +697,7 @@ export default {
 		let legend_y = this.svgHeight * 0.8 
 		
 		legend.append("rect")
-		    .attr('x', legend_x+ 50)
+		    .attr('x', legend_x+ 80)
 		    .attr('y', legend_y)
 		//.attr('width', this.svgWidth*0.7)
 		//.attr('height', 10)
@@ -451,14 +708,14 @@ export default {
 		legend.append("text")
 		    .attr("text-anchor", "end")
 		    .attr("y",  legend_y + legend_y*0.92)
-		    .attr("x", this.svgWidth*0.19)
+		    .attr("x", this.svgWidth*0.19+30)
 		    .text(localMin.toFixed(2))
 	    
 		legend.append("text")
 		    .attr("class", "legendText")
 		    .attr("text-anchor", "end")
 		    .attr("y",  legend_y - 10)
-		    .attr("x", this.svgWidth*0.19)
+		    .attr("x", this.svgWidth*0.19+30)
 		    .text(localMax.toFixed(2))
 	    }
 
@@ -511,7 +768,6 @@ export default {
 </script>
 
 <style>
-  
 .green {
     fill: #7fd76b;
 }
@@ -590,8 +846,30 @@ export default {
   border-radius: 13px;
   }  
   .sensorbtn:hover {
-   background-color: #1f6c39;
-   color: white;
+      background-color: #1f6c39;
+      color: white;
   }
-    
+  .canvas-wrapper {
+      position: relative;
+  }
+  .canvas-background {
+      position: absolute;
+      top: 0;
+      left: 18%;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      width: 70%;
+      height: 100%;
+  }  
+  .svg-drawing {
+      position: absolute;
+      top: 0;	
+      left: 18%;	
+      right: 0;		
+      bottom: 0;
+      pointer-events: none;
+      width: 70%;
+      height: 100%;
+  }  
 </style>

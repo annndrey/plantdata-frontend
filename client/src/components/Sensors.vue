@@ -59,7 +59,7 @@
 	  <div class="row">
 	    <div class="col-md-12">
 	      <span v-show="activeItem == '3d'">
-		<DensityChart title="Density Chart" :data="plotData" :probedata="probes" :probescoords="probesCoords" :parmax="parMax" :svgWidth="svgwidth"/>
+		<DensityChart title="Density Chart" :data="plotData" :probedata="probes" :probescoords="probesCoords" :deviation="deviation" :svgWidth="svgwidth"/>
 	      </span>
 	    </div>
 	  </div>
@@ -114,7 +114,7 @@ import GreenhouseNav from '@/components/GreenhouseNav'
 import WidgetNav from '@/components/WidgetNav'
 import LineChart from '@/components/LineChart'
 import DensityChart from '@/components/DensityChart'
-
+import { max, min, extent, deviation } from "d3-array";
 export default {
     name: 'Sensors',
     props: ['id'],
@@ -134,7 +134,7 @@ export default {
 	    selectedProbes: null,
 	    probesCoords: null,
 	    svgwidth: null,
-	    parMax: null,
+	    deviation: null,
 	    error: '',
 	    sensorlimits: false,
 	    loadingdata: false,
@@ -226,32 +226,36 @@ export default {
 	    this.plotData = tempData
 	},
 	findMax(data) {
-	    //console.log("Max", data)
+	    console.log("Max")
 	    let prnames = []
-	    let paramsMax = {}
+	    let allvalues = {}
 	    
 	    Object.keys(data.data).map( k => {
-		let key = k.split(" ")[3]
+		let key = k.split(" ")[0]
 		if (!prnames.includes(key)) {
 		    prnames.push(key)
 		}
 	    })
+	    
+	    console.log("prnames", prnames)
 	    prnames.map( pn => {
 		Object.keys(data.data).map(k => {
+		    console.log("KK", k)
 		    if (k.startsWith(pn)) {
-			let localmax = Math.max(...data.data[k])
-			if (paramsMax[pn] ) {
-			    if (paramsMax[pn] <= localmax) {
-				paramsMax[pn] = localmax
-			    }
+			let pdata = data.data[k]
+			if (allvalues[pn] ) {
+			    allvalues[pn] = allvalues[pn].concat(pdata)
 			} else {
-			    paramsMax[pn] = localmax
+			    allvalues[pn] = pdata
 			}
 		    }
 		})
 	    })
-	    //console.log("Max", paramsMax)
-	    this.parMax = paramsMax
+	    Object.keys(allvalues).map( k=> {
+		allvalues[k] = deviation(allvalues[k])
+	    })
+	    console.log("stdev", allvalues)
+	    this.deviation = allvalues
 	    
 	},
 	preformatData(data){
@@ -316,20 +320,25 @@ export default {
 		.then(request => {
 		    this.probesCoords = {}
 		    request.data.map( obj => {
-			let coords = {}
-			coords.x = obj.x
-			coords.y = obj.y
-			coords.z = obj.z
-			coords.row = obj.row
-			coords.col = obj.col
-			this.probesCoords[obj.uuid] = coords
+			if (obj.x) {
+			    let coords = {}
+			    coords.x = obj.x
+			    coords.y = obj.y
+			    coords.z = obj.z
+			    coords.row = obj.row
+			    coords.col = obj.col
+			    this.probesCoords[obj.uuid] = coords
+			}
 		    })
 		})
 		.then( req => {
 		    this.$axios.get(this.$backendhost+'data', { params: params })
 			.then(request1 => {
+			    console.log("SENSOR DATA", request1.data.data)
+			    
 			    this.plotData = request1.data.data
 			    this.fullData = {...this.plotData}
+			    
 			    /// Filter data based on previously selected sensors
 			    // If we filter data, we should modify the preformatData function to
 			    // consider already selected probes 
