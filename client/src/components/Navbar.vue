@@ -1,7 +1,7 @@
 <template>
 
   <nav class="navbar navbar-expand-sm fixed-top navbar-light border-bottom">
-    <a class="navbar-brand" href="http://fermata.tech/" style="color: white;"><img src="@/assets/logo.svg" height="30px"></a>
+    <a class="navbar-brand" href="http://host/" style="color: white;"><img src="@/assets/logo.svg" height="30px"></a>
 
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapseMenu" aria-controls="collapseMenu" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>

@@ -36,10 +36,10 @@ export default {
     methods: {
 	checkCurrentLogin () {
 	    //this.$cookie.set('auth', localStorage.token, 1)
-	    this.$cookie.set('auth', localStorage.token, {expires: 10000, domain: '.plantdata.fermata.tech'})
+	    this.$cookie.set('auth', localStorage.token, {expires: 10000, domain: '.host'})
 	    if (this.currentUser) {
 		this.$axios.defaults.headers.common.Authorization = 'Bearer ' + localStorage.token
-		this.$cookie.set('auth', localStorage.token, {expires: 10000, domain: '.plantdata.fermata.tech'})
+		this.$cookie.set('auth', localStorage.token, {expires: 10000, domain: '.host'})
 		this.$router.replace(this.$route.query.redirect || '/')
 	    } 
 	},
@@ -63,7 +63,7 @@ export default {
 	    this.$store.dispatch('login')
 	    this.$axios.defaults.headers.common.Authorization = 'Bearer ' + localStorage.token
 	    //this.$cookie.set('auth', localStorage.token, 1)
-	    this.$cookie.set('auth', localStorage.token, {expires: 10000, domain: '.plantdata.fermata.tech'})
+	    this.$cookie.set('auth', localStorage.token, {expires: 10000, domain: '.host'})
 	    this.$router.replace( this.$route.query.redirect || '/')
 	    
 	},
