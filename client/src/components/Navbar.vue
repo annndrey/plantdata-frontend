@@ -1,6 +1,6 @@
 <template>
   <nav class="navbar navbar-expand-sm fixed-top navbar-light bg-light" style="background-color: #fbb040 !important;">
-    <a class="navbar-brand" href="http://fermata.tech/" style="color: rgba(0, 0, 0, 0.5);"><img src="@/assets/fermata_logo_wide.png" height="40px"></a> Sensors Data
+    <a class="navbar-brand" href="http://host/" style="color: rgba(0, 0, 0, 0.5);"><img src="@/assets/logo_wide.png" height="40px"></a> Sensors Data
 
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapseMenu" aria-controls="collapseMenu" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
